@@ -10,14 +10,17 @@ WORKDIR /app
 # Copia os arquivos de manifesto de pacotes
 COPY package.json package-lock.json ./
 
-# Instala as dependências de produção primeiro para otimizar o cache
-RUN npm install --omit=dev
+# Instala todas as dependências (produção + desenvolvimento) para permitir o build
+RUN npm ci
 
 # Copia o restante do código-fonte da aplicação
 COPY . .
 
 # Compila a aplicação Next.js
 RUN npm run build
+
+# Remove as dependências de desenvolvimento para preparar o artefato final
+RUN npm prune --omit=dev
 
 # ==============================================================================
 # PRODUCTION STAGE
