@@ -7,20 +7,17 @@ FROM node:20-alpine AS builder
 # Define o diretório de trabalho
 WORKDIR /app
 
-# Instala o pnpm (se você usar npm ou yarn, pode remover esta linha)
-RUN npm install -g pnpm
-
 # Copia os arquivos de manifesto de pacotes
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
 
 # Instala as dependências de produção primeiro para otimizar o cache
-RUN pnpm install --prod
+RUN npm install --omit=dev
 
 # Copia o restante do código-fonte da aplicação
 COPY . .
 
 # Compila a aplicação Next.js
-RUN pnpm build
+RUN npm run build
 
 # ==============================================================================
 # PRODUCTION STAGE
@@ -43,4 +40,4 @@ COPY --from=builder /app/package.json ./package.json
 EXPOSE 3000
 
 # Comando para iniciar a aplicação
-CMD ["node_modules/.bin/next", "start"]
+CMD ["npm", "start"]
