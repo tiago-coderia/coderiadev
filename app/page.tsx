@@ -7,7 +7,7 @@ import Footer from '@/components/front/Footer';
 
 export default function Home() {
   return (
-    <div className="flex flex-col gap-36">
+    <div className="flex flex-col gap-20">
       <header className="w-full fixed bg-background/30 border-b border-background backdrop-blur-sm  z-50">
         <Header />
       </header>
