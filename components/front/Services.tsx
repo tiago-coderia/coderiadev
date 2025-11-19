@@ -12,7 +12,7 @@ import {
 import Image from 'next/image';
 function Services() {
   return (
-    <section className="flex flex-col gap-12">
+    <section className="flex flex-col gap-12" id="servicos">
       <div className="intro">
         <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tighter">
           Meus Serviços

@@ -129,13 +129,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-sans);
+    scroll-behavior: smooth;
   }
 
   a {
-    opacity: 0.5;
+    opacity: 1;
     transition: opacity 0.2s;
     &:hover {
-      opacity: 1;
+      opacity: 0.5;
     }
   }
 
@@ -143,4 +144,14 @@
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+}
+/* ANCORAS */
+#potencialize,
+#servicos,
+#contato {
+  scroll-margin-top: 80px;
+}
+
+html {
+  scroll-behavior: smooth;
 }

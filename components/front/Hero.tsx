@@ -1,6 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 function Hero() {
   return (
@@ -19,8 +24,16 @@ function Hero() {
         e Node.js para criar aplicações inteligentes, escaláveis ​​e eficientes.
       </p>
       <div className="flex gap-4">
-        <Button variant="outline">Ver meus projetos</Button>
-        <Button variant="secondary">GitHub</Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline">Ver meus projetos</Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Em construção!</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* <Button variant="secondary">GitHub</Button> */}
       </div>
 
       <div className="relative">

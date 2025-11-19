@@ -3,8 +3,8 @@ import CardTec from '../ui/cardTec';
 
 function Workflow() {
   return (
-    <section className="flex flex-col gap-12">
-      <div className="intro ">
+    <section className="flex flex-col gap-12" id="potencialize">
+      <div>
         <h2 className="text-3xl md:text-5xl font-bold  tracking-tighter">
           Potencialize seu fluxo de trabalho com IA.
         </h2>
