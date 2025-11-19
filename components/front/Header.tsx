@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 
 function Header() {
   return (
-    <div className="flex items-center justify-between p-4 w-container">
+    <div className="flex items-center justify-between py-4 w-container">
       <Image
         src="/logocompleta.svg"
         alt="Coderia Logo"
-        width={220}
-        height={80}
+        width={200}
+        height={46}
       />
       <nav>
         <ul className="flex gap-26">
@@ -26,7 +26,7 @@ function Header() {
         </ul>
       </nav>
 
-      <Button variant="outline">Contact Me</Button>
+      <Button variant="outline">Entre em contato</Button>
     </div>
   );
 }

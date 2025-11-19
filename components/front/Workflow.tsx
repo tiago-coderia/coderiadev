@@ -1,40 +1,40 @@
 import React from 'react';
-import Card from '../ui/Card';
+import CardTec from '../ui/cardTec';
 
 function Workflow() {
   return (
     <section className="flex flex-col gap-12">
       <div className="intro ">
         <h2 className="text-3xl md:text-5xl font-bold  tracking-tighter">
-          Empower Your Workflow with AI
+          Potencialize seu fluxo de trabalho com IA.
         </h2>
         <p className="mt-4 text-lg ">
-          Showcasing my ability to integrate AI, build complex automations, and
-          deliver robust full-stack solutions.
+          Demonstrando minha capacidade de integrar IA, construir automações
+          complexas e entregar soluções robustas de pilha completa.
         </p>
       </div>
       <div className="grid grid-cols-2 grid-gap-8 gap-8">
-        <Card
-          title="AI-Driven Workflow Automation"
-          content="Developed a comprehensive workflow automation system using N8N, integrating AI services to streamline business processes and enhance productivity."
+        <CardTec
+          title="Automação de fluxo de trabalho orientada por IA"
+          content="Sistema abrangente de automação de fluxo de trabalho usando N8N, integrando serviços de IA para otimizar processos de negócios e aumentar a produtividade."
           image="/card1.png"
           alt="AI-Driven Workflow Automation"
         />
-        <Card
-          title="N8N Automated CRM Sync"
-          content="Complex workflow automation syncing data across Salesforce, Hubspot, and internal databases in real-time."
+        <CardTec
+          title="Sincronização automatizada de CRM N8N"
+          content="Automação de fluxos de trabalho complexos, sincronizando dados em tempo real entre Salesforce, Hubspot e bancos de dados internos."
           image="/card2.png"
           alt="N8N Automated CRM Sync"
         />
-        <Card
-          title="Real-time Data Analytics Dashboard"
-          content="Full-stack application using Next.js, Node.js, and WebSockets to visualize live business metrics."
+        <CardTec
+          title="Painel de análise de dados em tempo real"
+          content="Aplicação full-stack que utiliza Next.js, Node.js e WebSockets para visualizar métricas de negócios em tempo real."
           image="/card3.png"
           alt="Real-time Data Analytics Dashboard"
         />
-        <Card
-          title="E-commerce Platform with AI Search"
-          content="Developed a performant e-commerce site with an AI-driven semantic search feature for superior product discovery."
+        <CardTec
+          title="E-commerce com busca por IA e Chatbot"
+          content="E-commerce de alto desempenho com um recurso de busca semântica baseado em IA para uma descoberta de produtos superior."
           image="/card4.png"
           alt="E-commerce Platform with AI Search"
         />

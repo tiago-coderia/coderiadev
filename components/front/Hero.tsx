@@ -1,5 +1,4 @@
 import React from 'react';
-import { ArrowUpIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
@@ -13,15 +12,15 @@ function Hero() {
         height={200}
       />
       <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-foreground tracking-tighter">
-        Building Intelligent <br /> Web Experiences
+        Construindo Aplicações <br /> Web Inteligentes
       </h1>
       <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-        AI and FullStack Developer specializing in N8N automations, Next.js, and
-        Node.js to create smart, scalable, and efficient applications.
+        Desenvolvedor FullStack e de IA especializado em automações N8N, Next.js
+        e Node.js para criar aplicações inteligentes, escaláveis ​​e eficientes.
       </p>
       <div className="flex gap-4">
-        <Button variant="outline">View My Work</Button>
-        <Button variant="outline">GitHub Profile</Button>
+        <Button variant="outline">Ver meus projetos</Button>
+        <Button variant="secondary">GitHub</Button>
       </div>
 
       <div className="relative">
