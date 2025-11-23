@@ -12,7 +12,7 @@ import {
 import Image from 'next/image';
 function Services() {
   return (
-    <section className="flex flex-col gap-12" id="servicos">
+    <section className="flex flex-col gap-12 px-8" id="servicos">
       <div className="intro">
         <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tighter">
           Meus Serviços
@@ -22,7 +22,7 @@ function Services() {
           uma gama de serviços para dar vida às suas ideias.
         </p>
       </div>
-      <div className="grid grid-cols-3 gap-8">
+      <div className="grid grid-cols md:grid-cols-3 gap-8">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-md mx-auto">

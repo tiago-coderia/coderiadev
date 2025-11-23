@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 function Footer() {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between px-8">
       <div className="text-center md:text-left">
         <Image
           src="/logocompleta.svg"

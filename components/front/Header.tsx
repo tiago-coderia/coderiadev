@@ -22,7 +22,7 @@ function Header() {
     }, 2000); // Volta ao texto original após 2 segundos
   };
   return (
-    <div className="flex items-center justify-between py-4 w-container">
+    <div className="flex flex-col md:flex-row items-center justify-between py-4 w-container  px-0 md:px-8 gap-8 md:gap-0">
       <Link href="/">
         <Image
           src="/logocompleta.svg"
@@ -31,7 +31,7 @@ function Header() {
           height={46}
         />
       </Link>
-      <div className="flex gap-8 justify-center items-center">
+      <div className="flex gap-8 justify-center items-center hidden md:flex">
         <Link href="#potencialize">Porque IA?</Link>
         <Link href="#servicos">Serviços</Link>
         <Tooltip>

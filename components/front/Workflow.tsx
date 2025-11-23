@@ -3,7 +3,7 @@ import CardTec from '../ui/cardTec';
 
 function Workflow() {
   return (
-    <section className="flex flex-col gap-12" id="potencialize">
+    <section className="flex flex-col gap-12 px-8" id="potencialize">
       <div>
         <h2 className="text-3xl md:text-5xl font-bold  tracking-tighter">
           Potencialize seu fluxo de trabalho com IA.
@@ -13,7 +13,7 @@ function Workflow() {
           complexas e entregar soluções robustas de pilha completa.
         </p>
       </div>
-      <div className="grid grid-cols-2 grid-gap-8 gap-8">
+      <div className="grid grid-cols md:grid-cols-2 grid-gap-8 gap-8">
         <CardTec
           title="Automação de fluxo de trabalho orientada por IA"
           content="Sistema abrangente de automação de fluxo de trabalho usando N8N, integrando serviços de IA para otimizar processos de negócios e aumentar a produtividade."
