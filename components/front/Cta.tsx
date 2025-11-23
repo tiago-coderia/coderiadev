@@ -12,12 +12,21 @@ function Cta() {
   const [buttonText, setButtonText] = useState('Entre em contato');
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText('tiago.coderia@gmail.com');
-    setButtonText('Email Copiado!');
+    // Detecta se é mobile (largura <= 768px)
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-    setTimeout(() => {
-      setButtonText('Entre em contato');
-    }, 2000); // Volta ao texto original após 2 segundos
+    if (isMobile) {
+      // Em mobile, abre o cliente de email
+      window.location.href = 'mailto:tiago.coderia@gmail.com';
+    } else {
+      // Em desktop, copia o email para a área de transferência
+      navigator.clipboard.writeText('tiago.coderia@gmail.com');
+      setButtonText('Email Copiado!');
+
+      setTimeout(() => {
+        setButtonText('Entre em contato');
+      }, 2000); // Volta ao texto original após 2 segundos
+    }
   };
 
   return (

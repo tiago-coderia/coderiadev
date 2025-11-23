@@ -9,7 +9,7 @@ import {
 
 function Hero() {
   return (
-    <section className="flex flex-col pt-32 gap-12 gradient-bg justify-center items-center">
+    <section className="flex flex-col pt-32 gap-12 gradient-bg justify-center items-center px-8">
       <Image
         src="/logocoderia-v.svg"
         alt="Hero Image"
