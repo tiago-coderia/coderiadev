@@ -17,25 +17,25 @@ function Workflow() {
         <CardTec
           title="Automação de fluxo de trabalho orientada por IA"
           content="Sistema abrangente de automação de fluxo de trabalho usando N8N, integrando serviços de IA para otimizar processos de negócios e aumentar a produtividade."
-          image="/card1.png"
+          image="/card1.jpg"
           alt="AI-Driven Workflow Automation"
         />
         <CardTec
           title="Sincronização automatizada de CRM N8N"
           content="Automação de fluxos de trabalho complexos, sincronizando dados em tempo real entre Salesforce, Hubspot e bancos de dados internos."
-          image="/card2.png"
+          image="/card2.jpg"
           alt="N8N Automated CRM Sync"
         />
         <CardTec
           title="Painel de análise de dados em tempo real"
           content="Aplicação full-stack que utiliza Next.js, Node.js e WebSockets para visualizar métricas de negócios em tempo real."
-          image="/card3.png"
+          image="/card3.jpg"
           alt="Real-time Data Analytics Dashboard"
         />
         <CardTec
           title="E-commerce com busca por IA e Chatbot"
           content="E-commerce de alto desempenho com um recurso de busca semântica baseado em IA para uma descoberta de produtos superior."
-          image="/card4.png"
+          image="/card4.jpg"
           alt="E-commerce Platform with AI Search"
         />
       </div>
