@@ -1,6 +1,6 @@
 /**
- * Coderia.dev — Navigation Component
- * Handles header scroll states, mobile menu toggle, and accessible interactions
+ * Coderia.dev — Navigation & Interactive Triggers
+ * Handles header scroll, mobile drawer, and clipboard email copying (from Header.tsx and Cta.tsx)
  */
 
 export class Navigation {
@@ -10,6 +10,7 @@ export class Navigation {
     this.mobileNav = document.getElementById('mobile-nav');
     this.mobileLinks = document.querySelectorAll('.mobile-nav-link');
     this.desktopLinks = document.querySelectorAll('.nav-link');
+    this.contactButtons = document.querySelectorAll('[data-email]');
     
     this.init();
   }
@@ -18,6 +19,7 @@ export class Navigation {
     this.bindScroll();
     this.bindMobileToggle();
     this.bindLinks();
+    this.bindEmailCopy();
   }
 
   bindScroll() {
@@ -69,18 +71,43 @@ export class Navigation {
   }
 
   bindLinks() {
-    // Close mobile nav when clicking a link
     this.mobileLinks.forEach(link => {
       link.addEventListener('click', () => {
         this.setMobileMenuState(false);
       });
     });
 
-    // Active state highlighting for desktop links
     this.desktopLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
+      link.addEventListener('click', () => {
         this.desktopLinks.forEach(l => l.classList.remove('active'));
         link.classList.add('active');
+      });
+    });
+  }
+
+  bindEmailCopy() {
+    this.contactButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const email = btn.getAttribute('data-email') || 'hello@coderia.dev';
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+          window.location.href = `mailto:${email}`;
+          return;
+        }
+
+        navigator.clipboard.writeText(email).then(() => {
+          const textSpan = btn.querySelector('.btn-text') || btn;
+          const originalText = textSpan.textContent;
+          textSpan.textContent = 'Email Copiado!';
+
+          setTimeout(() => {
+            textSpan.textContent = originalText;
+          }, 2000);
+        }).catch(() => {
+          window.location.href = `mailto:${email}`;
+        });
       });
     });
   }

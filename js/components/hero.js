@@ -1,43 +1,22 @@
 /**
- * Coderia.dev — Hero Component
- * Manages hero element targets, coordinates, and text splitting preparation
+ * Coderia.dev — Section Targets & Coordinate Resolver
+ * Resolves live viewport bounding boxes and coordinates for all sections (Header, Hero, Workflow, Services, CTA, Footer)
  */
 
 export class Hero {
   constructor() {
     this.section = document.getElementById('hero');
-    this.eyebrow = document.getElementById('hero-eyebrow');
+    this.symbol = document.getElementById('hero-symbol');
     this.headline = document.getElementById('hero-headline');
     this.headlineHighlight = document.getElementById('headline-highlight');
     this.description = document.getElementById('hero-description');
     this.actions = document.getElementById('hero-actions');
     this.primaryCta = document.getElementById('hero-primary-cta');
-    this.secondaryCta = document.getElementById('hero-secondary-cta');
-    this.complementary = document.getElementById('hero-complementary');
-    this.blueprintLineH = document.getElementById('blueprint-line-h');
-    this.blueprintLineV = document.getElementById('blueprint-line-v');
-
-    this.prepareElements();
-  }
-
-  prepareElements() {
-    // Hide blueprint lines initially
-    if (this.blueprintLineH) {
-      this.blueprintLineH.style.transform = 'scaleX(0)';
-      this.blueprintLineH.style.transformOrigin = 'left center';
-    }
-    if (this.blueprintLineV) {
-      this.blueprintLineV.style.transform = 'scaleY(0)';
-      this.blueprintLineV.style.transformOrigin = 'center top';
-    }
+    this.showcaseFrame = document.getElementById('hero-showcase-frame');
   }
 
   /**
    * Retrieves the current viewport position of a target element
-   * @param {HTMLElement} element 
-   * @param {number} offsetX Normalized offset inside the element [0..1]
-   * @param {number} offsetY Normalized offset inside the element [0..1]
-   * @returns {{x: number, y: number}}
    */
   getElementAnchor(element, offsetX = 0.5, offsetY = 0.5) {
     if (!element) {
@@ -52,9 +31,6 @@ export class Hero {
 
   /**
    * Retrieves the exact bounding box of a target element in viewport coordinates
-   * @param {HTMLElement} element 
-   * @param {number} padding 
-   * @returns {{left: number, top: number, width: number, height: number, right: number, bottom: number}}
    */
   getElementBox(element, padding = 4) {
     if (!element) {
@@ -77,54 +53,55 @@ export class Hero {
 
   getTargetBoxes() {
     return {
-      header: () => {
-        const header = document.querySelector('.site-header');
-        return this.getElementBox(header, 0);
-      },
-      headerLogo: () => {
-        const logo = document.querySelector('.brand-logo');
-        return this.getElementBox(logo, 6);
-      },
-      headerNav: () => {
-        const nav = document.querySelector('.nav-list');
-        return this.getElementBox(nav, 6);
-      },
-      headerCta: () => {
-        const btn = document.getElementById('header-cta-btn');
-        return this.getElementBox(btn, 4);
-      },
-      eyebrow: () => this.getElementBox(this.eyebrow, 4),
+      // Header
+      header: () => this.getElementBox(document.getElementById('site-header'), 0),
+      headerLogo: () => this.getElementBox(document.querySelector('.brand-logo'), 6),
+      headerNav: () => this.getElementBox(document.querySelector('.nav-list'), 6),
+      headerCta: () => this.getElementBox(document.getElementById('header-contact-btn'), 4),
+
+      // Hero
+      heroSymbol: () => this.getElementBox(this.symbol, 6),
       headline: () => this.getElementBox(this.headline, 8),
       headlineHighlight: () => this.getElementBox(this.headlineHighlight, 4),
       description: () => this.getElementBox(this.description, 6),
       primaryCta: () => this.getElementBox(this.primaryCta, 4),
-      secondaryCta: () => this.getElementBox(this.secondaryCta, 4),
-      complementary: () => this.getElementBox(this.complementary, 4)
+      showcaseFrame: () => this.getElementBox(this.showcaseFrame, 8),
+
+      // Workflow (#potencialize)
+      workflowHeader: () => this.getElementBox(document.getElementById('workflow-header'), 6),
+      workflowCard1: () => this.getElementBox(document.getElementById('card-tec-1'), 6),
+      workflowCard2: () => this.getElementBox(document.getElementById('card-tec-2'), 6),
+      workflowCard3: () => this.getElementBox(document.getElementById('card-tec-3'), 6),
+      workflowCard4: () => this.getElementBox(document.getElementById('card-tec-4'), 6),
+
+      // Services (#servicos)
+      servicesHeader: () => this.getElementBox(document.getElementById('services-header'), 6),
+      serviceCard1: () => this.getElementBox(document.getElementById('service-card-1'), 6),
+      serviceCard2: () => this.getElementBox(document.getElementById('service-card-2'), 6),
+      serviceCard3: () => this.getElementBox(document.getElementById('service-card-3'), 6),
+
+      // CTA (#contato)
+      ctaContainer: () => this.getElementBox(document.getElementById('cta-container'), 8),
+      ctaContactBtn: () => this.getElementBox(document.getElementById('cta-contact-btn'), 4),
+
+      // Footer
+      footerBrand: () => this.getElementBox(document.getElementById('footer-brand'), 6),
+      footerSymbol: () => this.getElementBox(document.getElementById('footer-symbol'), 4),
+      footerSocial: () => this.getElementBox(document.getElementById('footer-social-links'), 6)
     };
   }
 
   getTargetPositions() {
     return {
-      headerLogo: () => {
-        const logo = document.querySelector('.brand-logo');
-        return this.getElementAnchor(logo, 0.5, 0.5);
-      },
-      headerNav: () => {
-        const nav = document.querySelector('.nav-list');
-        return this.getElementAnchor(nav, 0.5, 0.5);
-      },
-      headerCta: () => {
-        const btn = document.getElementById('header-cta-btn');
-        return this.getElementAnchor(btn, 0.5, 0.5);
-      },
-      eyebrow: () => this.getElementAnchor(this.eyebrow, 0.1, 0.5),
+      headerLogo: () => this.getElementAnchor(document.querySelector('.brand-logo'), 0.5, 0.5),
+      headerNav: () => this.getElementAnchor(document.querySelector('.nav-list'), 0.5, 0.5),
+      headerCta: () => this.getElementAnchor(document.getElementById('header-contact-btn'), 0.5, 0.5),
+      heroSymbol: () => this.getElementAnchor(this.symbol, 0.5, 0.5),
       headlineStart: () => this.getElementAnchor(this.headline, 0.15, 0.3),
       headlineHighlight: () => this.getElementAnchor(this.headlineHighlight, 0.5, 0.5),
       description: () => this.getElementAnchor(this.description, 0.3, 0.5),
       primaryCta: () => this.getElementAnchor(this.primaryCta, 0.5, 0.5),
-      secondaryCta: () => this.getElementAnchor(this.secondaryCta, 0.5, 0.5),
-      complementary: () => this.getElementAnchor(this.complementary, 0.5, 0.5),
-      blueprintLineH: () => this.getElementAnchor(this.blueprintLineH, 0.5, 0.5)
+      showcaseFrame: () => this.getElementAnchor(this.showcaseFrame, 0.5, 0.5)
     };
   }
 }

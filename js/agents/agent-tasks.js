@@ -1,38 +1,48 @@
 /**
- * Coderia.dev — Agent Tasks & Progress Engine (14-Agent Swarm)
- * Computes authentic progress from the 14 specialist agent tasks
+ * Coderia.dev — Agent Tasks & Progress Engine (Scroll-Driven Full Site)
+ * Computes authentic cumulative progress as the Swarm constructs each section on scroll
  */
 
 export class AgentTasks {
   constructor() {
     this.tasks = [
-      { id: 'init-swarm', phase: 'INIT', label: '14 AGENTS DEPLOYED', completed: false },
-      { id: 'grid-header', phase: 'STRUCT', label: 'GRID: FRAME HEADER BOUNDS', completed: false },
-      { id: 'layout-nav', phase: 'STRUCT', label: 'LAYOUT: ALIGN NAVIGATION GRID', completed: false },
-      { id: 'icones-logo', phase: 'STRUCT', label: 'ÍCONES: MOUNT BRAND VECTOR', completed: false },
-      { id: 'texto-logo', phase: 'STRUCT', label: 'TEXTO: WRITE BRAND IDENTIFIER', completed: false },
-      { id: 'cor-brand', phase: 'STRUCT', label: 'COR: INJECT BRAND ACCENTS', completed: false },
-      { id: 'css-nav', phase: 'STRUCT', label: 'CSS: COMPUTE NAV FLEX TOKENS', completed: false },
-      { id: 'ui-header-cta', phase: 'STRUCT', label: 'UI: SHAPE HEADER ACTION', completed: false },
-      { id: 'grid-eyebrow', phase: 'TYPE', label: 'GRID: FRAME EYEBROW BADGE', completed: false },
-      { id: 'foto-dot', phase: 'TYPE', label: 'FOTO: MOUNT STATUS PULSE', completed: false },
-      { id: 'texto-eyebrow', phase: 'TYPE', label: 'TEXTO: STREAM EYEBROW COPY', completed: false },
-      { id: 'grid-headline', phase: 'TYPE', label: 'GRID: FRAME HEADLINE VIEWPORT', completed: false },
-      { id: 'tipo-scale', phase: 'TYPE', label: 'TIPO: COMPUTE CLAMP SCALE', completed: false },
-      { id: 'texto-headline', phase: 'TYPE', label: 'TEXTO: COMPOSE HEADLINE COPY', completed: false },
-      { id: 'cor-gradient', phase: 'TYPE', label: 'COR: PAINT DIGITAL EXPERIENCES', completed: false },
-      { id: 'grid-desc', phase: 'UI/MOTION', label: 'GRID: FRAME SYSTEM DESCRIPTION', completed: false },
-      { id: 'texto-desc', phase: 'UI/MOTION', label: 'TEXTO: INJECT CORE CAPABILITIES', completed: false },
-      { id: 'css-spacing', phase: 'UI/MOTION', label: 'CSS: ALIGN VERTICAL RHYTHM', completed: false },
-      { id: 'grid-ctas', phase: 'UI/MOTION', label: 'GRID: FRAME DUAL ACTION CLUSTER', completed: false },
-      { id: 'ui-buttons', phase: 'UI/MOTION', label: 'UI: SHAPE PILL RADII & BORDERS', completed: false },
-      { id: 'icones-cta', phase: 'UI/MOTION', label: 'ÍCONES: ALIGN ARROW VECTOR', completed: false },
-      { id: 'form-triggers', phase: 'UI/MOTION', label: 'FORM: RIG CONTACT PROTOCOLS', completed: false },
-      { id: 'motion-spring', phase: 'UI/MOTION', label: 'MOTION: CALIBRATE SPRING CURVES', completed: false },
-      { id: 'dados-badge', phase: 'AUDIT', label: 'DADOS: INJECT STUDIO METRICS', completed: false },
-      { id: 'teste-simulate', phase: 'AUDIT', label: 'TESTE: SIMULATE INTERACTION AUDIT', completed: false },
-      { id: 'qa-certify', phase: 'AUDIT', label: 'QA: CERTIFY SYSTEM GEOMETRY', completed: false },
-      { id: 'complete', phase: 'READY', label: 'INTERFACE READY', completed: false }
+      // Section 1: Header + Hero
+      { id: 'hero-init', section: 'HERO', label: '14 AGENTS DEPLOYED', completed: false },
+      { id: 'hero-header', section: 'HERO', label: 'GRID: FRAME HEADER', completed: false },
+      { id: 'hero-logo', section: 'HERO', label: 'ÍCONES: MOUNT LOGO', completed: false },
+      { id: 'hero-symbol', section: 'HERO', label: 'FOTO: MOUNT V-SYMBOL', completed: false },
+      { id: 'hero-headline', section: 'HERO', label: 'GRID: FRAME HEADLINE', completed: false },
+      { id: 'hero-copy', section: 'HERO', label: 'TEXTO: WRITE HEADLINE & COPY', completed: false },
+      { id: 'hero-gradient', section: 'HERO', label: 'COR: PAINT WEB INTELIGENTES', completed: false },
+      { id: 'hero-cta', section: 'HERO', label: 'UI: SHAPE PROJECTS CTA', completed: false },
+      { id: 'hero-showcase', section: 'HERO', label: 'GRID: FRAME N8N WORKSPACE', completed: false },
+
+      // Section 2: Workflow
+      { id: 'wf-header', section: 'WORKFLOW', label: 'GRID: FRAME WORKFLOW SECTION', completed: false },
+      { id: 'wf-card-1', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 1', completed: false },
+      { id: 'wf-card-2', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 2', completed: false },
+      { id: 'wf-card-3', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 3', completed: false },
+      { id: 'wf-card-4', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 4', completed: false },
+      { id: 'wf-audit', section: 'WORKFLOW', label: 'QA: AUDIT AUTOMATION GRID', completed: false },
+
+      // Section 3: Services
+      { id: 'srv-header', section: 'SERVICES', label: 'GRID: FRAME SERVICES SECTION', completed: false },
+      { id: 'srv-card-1', section: 'SERVICES', label: 'ÍCONES: MOUNT AI ICON 1', completed: false },
+      { id: 'srv-card-2', section: 'SERVICES', label: 'ÍCONES: MOUNT N8N ICON 2', completed: false },
+      { id: 'srv-card-3', section: 'SERVICES', label: 'ÍCONES: MOUNT DEV ICON 3', completed: false },
+      { id: 'srv-style', section: 'SERVICES', label: 'UI: SHAPE SERVICE SURFACES', completed: false },
+
+      // Section 4: CTA
+      { id: 'cta-frame', section: 'CTA', label: 'GRID: FRAME CONTACT SECTION', completed: false },
+      { id: 'cta-copy', section: 'CTA', label: 'TEXTO: STREAM PROPOSAL COPY', completed: false },
+      { id: 'cta-button', section: 'CTA', label: 'FORM: RIG EMAIL CLIPBOARD', completed: false },
+      { id: 'cta-motion', section: 'CTA', label: 'MOTION: CALIBRATE HOVER TOOLTIP', completed: false },
+
+      // Section 5: Footer
+      { id: 'ft-frame', section: 'FOOTER', label: 'GRID: FRAME FOOTER BASELINE', completed: false },
+      { id: 'ft-brand', section: 'FOOTER', label: 'ÍCONES: MOUNT FOOTER BRANDING', completed: false },
+      { id: 'ft-social', section: 'FOOTER', label: 'TESTE: PROBE SOCIAL DESTINATIONS', completed: false },
+      { id: 'site-ready', section: 'READY', label: 'FULL SITE ASSEMBLED', completed: false }
     ];
 
     this.hudElement = document.getElementById('construction-hud');
@@ -42,7 +52,7 @@ export class AgentTasks {
     this.hudAgentsCount = document.getElementById('hud-agents-count');
     this.hudPhaseLabel = document.getElementById('hud-phase-label');
 
-    this.updateHUD(0, 'INIT');
+    this.updateHUD(0, 'HERO');
   }
 
   completeTask(taskId, phaseLabel) {
@@ -55,7 +65,7 @@ export class AgentTasks {
     const totalCount = this.tasks.length;
     const percent = Math.min(100, Math.round((completedCount / totalCount) * 100));
 
-    this.updateHUD(percent, phaseLabel || task?.phase || 'BUILDING');
+    this.updateHUD(percent, phaseLabel || task?.section || 'BUILDING');
     return percent;
   }
 
@@ -75,7 +85,7 @@ export class AgentTasks {
       if (this.hudAgentsCount) this.hudAgentsCount.textContent = 'ALL 14 AGENTS VERIFIED';
       if (this.hudElement) this.hudElement.classList.add('is-completed');
     } else {
-      if (this.hudTitle) this.hudTitle.textContent = 'BUILDING INTERFACE';
+      if (this.hudTitle) this.hudTitle.textContent = `BUILDING: ${phaseLabel}`;
       if (this.hudElement) this.hudElement.classList.remove('is-completed');
     }
   }
@@ -88,10 +98,5 @@ export class AgentTasks {
 
   isCompleted() {
     return this.tasks.every(t => t.completed);
-  }
-
-  reset() {
-    this.tasks.forEach(t => t.completed = false);
-    this.updateHUD(0, 'INIT');
   }
 }

@@ -153,7 +153,33 @@
   font-size: 8px;
 }
 
-/* Structural Blueprint Lines */
+/* Showcase Workspace Preview Frame (from coderia.dev Hero) */
+.hero-showcase-frame {
+  margin-top: var(--space-2xl);
+  max-width: 1040px;
+  width: 100%;
+  border-radius: 16px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 10px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 24px rgba(169, 149, 201, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-showcase-frame img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+.hero-brand-symbol {
+  width: 140px;
+  height: 140px;
+  margin-bottom: var(--space-lg);
+  filter: drop-shadow(0 0 24px rgba(169, 149, 201, 0.25));
+}
 .hero-blueprint-lines {
   position: absolute;
   top: 0;

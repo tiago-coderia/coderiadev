@@ -42,7 +42,7 @@ class App {
       
       // Allow slight breather before choreography kicks in for seamless page load
       setTimeout(() => {
-        coordinator.runChoreography();
+        coordinator.start();
       }, 350);
 
     } catch (err) {

@@ -1,28 +1,29 @@
 /* ==========================================================================
-   Coderia.dev — Design Tokens & Variables
+   Coderia.dev — Design Tokens & Variables (Adapted from coderia.dev Next.js App)
    ========================================================================== */
 
 :root {
-  /* Surface & Background Palette (Deep Graphite / Engineering Black) */
-  --bg-primary: #08080a;
-  --bg-surface: #0e0e13;
-  --bg-surface-elevated: #15151e;
-  --bg-surface-glass: rgba(14, 14, 19, 0.72);
+  /* Surface & Background Palette from coderia.dev */
+  --bg-primary: #1a1823;
+  --bg-surface: #232030;
+  --bg-surface-alt: #17151e;
+  --bg-surface-glass: rgba(26, 24, 35, 0.85);
   --bg-grid-line: rgba(255, 255, 255, 0.035);
 
   /* Text & Foreground Palette */
-  --text-primary: #f4f4f7;
-  --text-secondary: #8e8e9f;
-  --text-muted: #585868;
+  --text-primary: #e0ddef;
+  --text-secondary: #a09aad;
+  --text-muted: #736d80;
   --text-highlight: #ffffff;
+  --color-primary: #a995c9;
 
   /* Borders & Dividers */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(255, 255, 255, 0.18);
-  --border-highlight: rgba(255, 255, 255, 0.35);
+  --border-subtle: #302c40;
+  --border-active: rgba(169, 149, 201, 0.3);
+  --border-highlight: rgba(255, 255, 255, 0.25);
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
@@ -43,7 +44,7 @@
   --agent-qa:      #ef4444;  /* Red */
 
   /* UI Glows & Highlights */
-  --accent-glow: rgba(59, 130, 246, 0.15);
+  --accent-glow: rgba(169, 149, 201, 0.15);
   --accent-cyan: #06b6d4;
   --accent-white-glow: rgba(255, 255, 255, 0.08);
 
@@ -72,5 +73,5 @@
 
   /* Shadows */
   --shadow-hud: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --shadow-cursor: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
 }

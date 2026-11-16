@@ -1,47 +1,38 @@
-# Feature Specification: Coderia.dev — 14-Agent Collaborative Swarm System
+# Feature Specification: Coderia.dev — Full-Site Scroll-Driven Swarm Construction
 
 **Feature Branch**: `001-featurename-header-hero-agents`
-**Status**: Approved (Expanded to 14 Specialized Agents with Concurrent Assembly)
-**Input**: Multi-agent Swarm Rebuild with 14 simultaneous specialist agents ('Layout', 'Tipo', 'Cor', 'Grid', 'Foto', 'Texto', 'UI', 'Dados', 'Motion', 'Teste', 'CSS', 'Ícones', 'QA', 'Form')
+**Status**: Approved (Adapted from `coderia.dev` with Scroll-Triggered Section Swarm)
+**Input**: Comprehensive adaptation of the complete `coderia.dev` website (Header, Hero, Workflow, Services, CTA, Footer) built dynamically on scroll by the 14-agent Swarm.
 
 ---
 
 ## 1. Executive Summary & Concept
 
-Coderia.dev's interface is constructed not by 1 or 2 isolated cursors, but by an active **14-agent multiplayer design team** working concurrently across the screen:
-- **Grid**: Draws the physical wireframe bounding boxes where elements will live.
-- **Texto**: Injects and types copy, headlines, and descriptions.
-- **Tipo**: Adjusts font scales, line-heights, and typographic hierarchy.
-- **Cor**: Paints colors, gradients, and visual highlights.
-- **UI**: Shapes buttons, borders, border-radii, and surface materials.
-- **CSS**: Calibrates paddings, margins, and flex alignment.
-- **Ícones**: Positions SVG vectors, symbols, and icons.
-- **Foto**: Mounts badges, media indicators, and visual assets.
-- **Layout**: Sets structural containers, headers, and section flow.
-- **Dados**: Injects metadata, studio specs, and telemetry.
-- **Form**: Rigs contact buttons and interactive form triggers.
-- **Motion**: Calibrates springs, hover physics, and transitions.
-- **Teste**: Simulates live clicks, hover tests, and interaction bounds.
-- **QA**: Audits geometry and stamps green verification passes.
+Coderia.dev's complete web presence (adapted from the existing Next.js layout in `coderia.dev/`) is transformed into a continuous, scroll-driven multi-agent construction experience.
+
+As the visitor traverses the page:
+1. **Initial Viewport (Header & Hero)**:
+   - The 14-agent Swarm constructs the Header with `logocompleta.svg` and navigation.
+   - The Swarm builds the Hero with `logocoderia-v.svg`, `"Construindo Aplicações Web Inteligentes"`, subtitle, `"Ver meus projetos"` CTA, and the `wallpaper2.png` n8n showcase frame.
+2. **Scroll to Workflow (`#potencialize`)**:
+   - Swarm agents descend smoothly into the Workflow section.
+   - `Grid` draws wireframe boxes for the 4 project cards; `Foto` mounts `card1.jpg`, `card2.jpg`, `card3.jpg`, `card4.jpg`; `Texto` and `Tipo` write titles/descriptions; `UI` and `CSS` shape card elevations; `Teste` and `QA` audit the cards.
+3. **Scroll to Services (`#servicos`)**:
+   - Swarm descends to the Services grid.
+   - `Grid` frames the 3 service cards; `Ícones` mounts `icon1.svg`, `icon2.svg`, `icon3.svg`; `Texto` types `"IA e aprendizado de máquina"`, `"Automação N8N"`, `"Desenvolvimento FullStack"`.
+4. **Scroll to CTA (`#contato`)**:
+   - Swarm descends to the Call To Action section.
+   - `Grid` frames container and button; `Texto` streams `"Pronto para construir algo incrível?"`; `Form` and `Motion` rig the interactive email copy tooltip (`hello@coderia.dev`).
+5. **Scroll to Footer**:
+   - Swarm frames footer baseline, mounts `logocompleta.svg`, `logocoderia-v.svg`, and LinkedIn/GitHub links.
 
 ---
 
-## 2. Collaborative Multi-Agent Workflow
+## 2. Scroll-Driven Section State Machine
 
-Instead of strictly sequential single-agent steps, agents work in **concurrent choreographies**:
-1. **Header Assembly (Concurrent)**:
-   - `Grid` draws the header box while `Layout` coordinates baseline width.
-   - `Ícones` anchors `< />` symbol, `Texto` writes `CODERIA.DEV`, and `Cor` applies the cyan brand highlight.
-   - `CSS` sets flex spacing for navigation links, `Tipo` sets font sizes, and `UI` styles the "Let's Talk" CTA.
-2. **Hero Composition (Concurrent)**:
-   - `Grid` draws the eyebrow box; `Foto` sets the status dot, `Texto` writes `INDEPENDENT DIGITAL ENGINEERING STUDIO`.
-   - `Grid` draws the massive headline frame (`880 × 140`); `Texto` streams headline copy; `Tipo` configures clamp scales; `Cor` paints the glowing gradient on `"digital experiences"`.
-   - `Grid` draws the description box; `Texto` and `CSS` format the supporting paragraph.
-3. **CTAs & Specification Badge (Concurrent)**:
-   - `Grid` draws button frames; `UI` shapes pill curves; `Ícones` mounts the arrow SVG; `Motion` tests hover springs; `Form` wires the click targets.
-   - `Dados` and `Foto` mount the `DESIGNING • ENGINEERING • BUILDING` badge.
-4. **Verification & Testing (Concurrent)**:
-   - `Teste` triggers micro-press animations on buttons and links.
-   - `QA` inspects all components and places certified check indicators.
-5. **HUD Progress**:
-   - Accurately tracks all 14 agents, displaying `14 AGENTS ACTIVE` and calculating percentage based on parallel tasks.
+Each section follows an `unbuilt -> building -> ready` lifecycle:
+- Unbuilt sections start with unrevealed elements (or initial wireframe placement placeholders).
+- When a section enters the viewport (via `IntersectionObserver`), its dedicated Swarm construction routine is invoked.
+- The 14 agent cursors smoothly scroll/fly down to that section's coordinates, drawing bounding boxes, injecting texts/assets, and validating layout.
+- Once completed, the section marks itself as `built`, allowing standard user interaction and hover states.
+- The HUD tracks total site progress across all 5 sections (0% to 100%).
