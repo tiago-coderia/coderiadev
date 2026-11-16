@@ -6,3 +6,5 @@ desktop.ini
 # Agent & Logs
 .gemini/logs/
 *.log
+
+coderia.dev/
