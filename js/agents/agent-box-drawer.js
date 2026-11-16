@@ -52,6 +52,9 @@ export class AgentBoxDrawer {
       const targetY = box.bottom;
 
       // 1. Position agent at the top-left anchor point first
+      agent.setVisible(true);
+      agent.setIdle(false);
+      agent.resetRotation();
       agent.setPosition(startX, startY);
       agent.setAction('ANCHORING', 'is-selecting');
 

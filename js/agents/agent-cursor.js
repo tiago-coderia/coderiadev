@@ -1,6 +1,6 @@
 /**
  * Coderia.dev — Agent Cursor
- * Renders SVG cursor, pill tag, dynamic state badge, and styling
+ * Renders SVG cursor, pill tag, dynamic state badge, idle states, and pointer rotation
  */
 
 export class AgentCursor {
@@ -8,8 +8,10 @@ export class AgentCursor {
     this.profile = profile;
     this.container = container;
     this.element = null;
+    this.svgPointer = null;
     this.statusBadge = null;
     this.currentActionClass = '';
+    this.isIdle = false;
     
     this.x = window.innerWidth * profile.initialPos.x;
     this.y = window.innerHeight * profile.initialPos.y;
@@ -56,6 +58,7 @@ export class AgentCursor {
 
     this.container.appendChild(cursorEl);
     this.element = cursorEl;
+    this.svgPointer = cursorEl.querySelector('.cursor-pointer-svg');
   }
 
   setPosition(x, y) {
@@ -81,10 +84,37 @@ export class AgentCursor {
     }
   }
 
+  setIdle(isIdle) {
+    this.isIdle = isIdle;
+    if (this.element) {
+      if (isIdle) {
+        this.element.classList.add('is-idle');
+      } else {
+        this.element.classList.remove('is-idle');
+        this.resetRotation();
+      }
+    }
+  }
+
+  setRotation(degrees) {
+    if (this.svgPointer) {
+      this.svgPointer.style.transform = `rotate(${degrees}deg)`;
+    }
+  }
+
+  resetRotation() {
+    if (this.svgPointer) {
+      this.svgPointer.style.transform = '';
+    }
+  }
+
   setVisible(visible) {
     if (this.element) {
-      this.element.style.opacity = visible ? '1' : '0';
-      this.element.style.pointerEvents = 'none';
+      if (visible) {
+        this.element.classList.add('is-active');
+      } else {
+        this.element.classList.remove('is-active');
+      }
     }
   }
 

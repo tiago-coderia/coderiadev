@@ -24,7 +24,19 @@
   align-items: flex-start;
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
+  opacity: 0; /* Starts completely invisible */
   transition: opacity var(--duration-normal) var(--ease-smooth);
+}
+
+.agent-cursor.is-active {
+  opacity: 1;
+}
+
+/* When in idle mode: hide pills/tags and show only pointers following mouse */
+.agent-cursor.is-idle .agent-pill {
+  opacity: 0 !important;
+  transform: scale(0.65) !important;
+  pointer-events: none !important;
 }
 
 /* Cursor Pointer SVG */
@@ -32,7 +44,7 @@
   width: 20px;
   height: 20px;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
-  transform-origin: top left;
+  transform-origin: 10px 10px;
   transition: transform var(--duration-fast) var(--ease-spring);
 }
 
@@ -190,6 +202,91 @@
 .construction-hud.is-completed {
   border-color: rgba(16, 185, 129, 0.3);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(16, 185, 129, 0.15);
+}
+
+.construction-hud.is-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(16px) !important;
+  transition: opacity 0.5s var(--ease-smooth), transform 0.5s var(--ease-smooth) !important;
+}
+
+/* ==========================================================================
+   Restart Swarm Replay Button (Floating corner icon on 100% completion)
+   ========================================================================== */
+
+.restart-experience-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 106;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(26, 24, 35, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-active);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(169, 149, 201, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-highlight);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
+  transition: opacity var(--duration-normal) var(--ease-smooth),
+              transform var(--duration-normal) var(--ease-smooth),
+              background-color var(--duration-fast),
+              border-color var(--duration-fast);
+}
+
+.restart-experience-btn.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.restart-experience-btn:hover {
+  background-color: #2b273b;
+  border-color: var(--color-primary);
+  transform: scale(1.08);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 20px rgba(169, 149, 201, 0.4);
+}
+
+.restart-experience-btn svg {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.4s var(--ease-spring);
+}
+
+.restart-experience-btn:hover svg {
+  transform: rotate(-180deg);
+}
+
+.restart-tooltip {
+  position: absolute;
+  right: calc(100% + 12px);
+  background-color: rgba(20, 18, 28, 0.95);
+  color: var(--text-highlight);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  border: 1px solid var(--border-subtle);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(4px);
+  transition: opacity var(--duration-fast), transform var(--duration-fast);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.restart-experience-btn:hover .restart-tooltip {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .hud-header {

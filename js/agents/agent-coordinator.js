@@ -1,7 +1,11 @@
 /**
  * Coderia.dev — Scroll-Driven Multi-Agent Swarm Coordinator
- * Drives real-time collaborative construction section-by-section as the user scrolls,
- * anchoring bounding boxes and agent cursors directly to document coordinates (no floating).
+ * 
+ * Implements:
+ * 1. Strict in-view triggering (zero pre-execution off-screen)
+ * 2. Cursors start invisible, appearing right as they execute
+ * 3. Idle mouse-following inward orbital ring (hiding tags, matching spec screenshot)
+ * 4. 100% completion cleanup (hiding HUD & cursors, showing floating replay icon)
  */
 
 export class AgentCoordinator {
@@ -18,6 +22,9 @@ export class AgentCoordinator {
     this.activeSection = null;
     this.isBuildingSection = false;
     this.sectionQueue = [];
+    this.observer = null;
+
+    this.initRestartButton();
   }
 
   async start() {
@@ -29,7 +36,7 @@ export class AgentCoordinator {
     // 1. Build initial Viewport (Header + Hero)
     await this.buildHeroSection();
 
-    // 2. Attach Scroll Observers and scroll listeners for remaining sections
+    // 2. Attach strict In-View Scroll Observers for remaining sections
     this.initScrollObservers();
 
     // 3. Check if any section is already in view (e.g. page refresh midway)
@@ -59,13 +66,15 @@ export class AgentCoordinator {
     this.tasks.setAgentsCount(activeAgents.length);
     this.tasks.updateHUD(5, 'HERO');
 
-    // Radial deployment of all 14 agents
+    // Make cursors visible right as execution begins
     activeAgents.forEach((ag, idx) => {
+      ag.setVisible(true);
+      ag.setIdle(false);
       const el = ag.element;
       if (!el || !gsap) return;
 
       const angle = (idx / activeAgents.length) * Math.PI * 2;
-      const dist = 80 + (idx % 3) * 35;
+      const dist = 75 + (idx % 3) * 30;
       const targetX = ag.x + Math.cos(angle) * dist;
       const targetY = ag.y + Math.sin(angle) * dist;
 
@@ -75,18 +84,18 @@ export class AgentCoordinator {
         { 
           scale: 1, 
           opacity: 1, 
-          duration: 0.7, 
-          delay: idx * 0.04, 
-          ease: 'back.out(2.2)',
+          duration: 0.65, 
+          delay: idx * 0.03, 
+          ease: 'back.out(2.0)',
           onStart: () => ag.setPosition(targetX, targetY)
         }
       );
     });
 
-    await this.delay(600);
+    await this.delay(550);
     this.tasks.completeTask('hero-init', 'HERO');
 
-    // Header Construction (Grid + Ícones + Texto + UI)
+    // Header Construction
     const grid = this.agent('grid');
     const icones = this.agent('icones');
     const texto = this.agent('texto');
@@ -129,11 +138,11 @@ export class AgentCoordinator {
 
     await Promise.all([promiseHeader, promiseLogo]);
 
-    // Hero Symbol (Foto mounts V-symbol)
+    // Hero Symbol
     if (foto) {
       foto.setAction('MOUNT SYMBOL', 'is-selecting');
       const symPos = targets.heroSymbol();
-      await new Promise(r => this.movement.moveTo(foto, symPos.x, symPos.y, { duration: 0.55, onComplete: r }));
+      await new Promise(r => this.movement.moveTo(foto, symPos.x, symPos.y, { duration: 0.5, onComplete: r }));
       this.heroAnimation.revealHeroSymbol();
       this.tasks.completeTask('hero-symbol', 'HERO');
     } else {
@@ -141,14 +150,14 @@ export class AgentCoordinator {
       this.tasks.completeTask('hero-symbol', 'HERO');
     }
 
-    // Headline Construction (Grid + Texto + Tipo + Cor)
+    // Headline Construction
     const promiseHeadline = (async () => {
       if (grid) {
         await this.boxDrawer.drawBox({
           agent: grid,
           box: boxes.headline(),
           tagName: '<h1.hero-headline>',
-          duration: 0.9,
+          duration: 0.85,
           onMaterialize: () => {
             this.heroAnimation.revealHeadline();
             this.tasks.completeTask('hero-headline', 'HERO');
@@ -161,11 +170,11 @@ export class AgentCoordinator {
     })();
 
     const promiseCopy = (async () => {
-      await this.delay(150);
+      await this.delay(120);
       if (texto) {
         texto.setAction('WRITE HEADLINE', 'is-typing');
         const headPos = targets.headlineStart();
-        await new Promise(r => this.movement.moveTo(texto, headPos.x + 50, headPos.y + 10, { duration: 0.6, onComplete: r }));
+        await new Promise(r => this.movement.moveTo(texto, headPos.x + 50, headPos.y + 10, { duration: 0.55, onComplete: r }));
       }
       if (tipo) {
         tipo.setAction('SCALE 7xl', 'is-selecting');
@@ -213,7 +222,7 @@ export class AgentCoordinator {
         agent: grid,
         box: scBox,
         tagName: '<div.n8n-showcase>',
-        duration: 0.75,
+        duration: 0.7,
         onMaterialize: () => {
           this.heroAnimation.revealShowcaseFrame();
           this.tasks.completeTask('hero-showcase', 'HERO');
@@ -221,23 +230,28 @@ export class AgentCoordinator {
       });
     }
 
-    // Settle into ambient idle anchored around Hero
-    this.ambientSwarmCluster(document.getElementById('hero'));
+    // Enter idle mode: hide tags, form circular ring following visitor mouse!
+    this.enterIdleMouseOrbit();
   }
 
   /**
-   * ATTACH INTERSECTION OBSERVERS AND SCROLL LISTENERS
+   * ATTACH STRICT IN-VIEW SCROLL OBSERVERS
+   * Only triggers when section enters the user's field of view (rootMargin: 0px)
    */
   initScrollObservers() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+
     const observerOptions = {
       root: null,
-      rootMargin: '150px 0px 50px 0px',
-      threshold: [0, 0.05, 0.1]
+      rootMargin: '0px 0px 0px 0px', // Strict in-view only!
+      threshold: [0.15, 0.2]
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    this.observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.15) {
           const sectionId = entry.target.id;
           if (!this.builtSections.has(sectionId)) {
             this.queueSection(sectionId);
@@ -248,24 +262,23 @@ export class AgentCoordinator {
 
     ['potencialize', 'servicos', 'contato', 'site-footer'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) observer.observe(el);
+      if (el) this.observer.observe(el);
     });
 
-    // Fallback scroll listener: if user scrolls near bottom of page, build footer
-    window.addEventListener('scroll', () => {
+    // Bottom of page scroll check for footer
+    this.scrollCheckFn = () => {
       const scrollY = window.scrollY || window.pageYOffset || 0;
       const scrollPos = scrollY + window.innerHeight;
-      const docHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight
-      );
+      const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
 
-      if (scrollPos >= docHeight - 250) {
+      if (scrollPos >= docHeight - 80) {
         if (!this.builtSections.has('site-footer')) {
           this.queueSection('site-footer');
         }
       }
-    }, { passive: true });
+    };
+
+    window.addEventListener('scroll', this.scrollCheckFn, { passive: true });
   }
 
   checkVisibleSections() {
@@ -273,7 +286,8 @@ export class AgentCoordinator {
       const el = document.getElementById(id);
       if (el && !this.builtSections.has(id)) {
         const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight + 100 && rect.bottom > 0) {
+        // Only trigger if at least 15% of the section is strictly visible inside viewport
+        if (rect.top < window.innerHeight - 80 && rect.bottom > 80) {
           this.queueSection(id);
         }
       }
@@ -295,6 +309,9 @@ export class AgentCoordinator {
   async processSection(sectionId) {
     this.isBuildingSection = true;
     this.activeSection = sectionId;
+
+    // Wake agents up from mouse orbit to execute
+    this.exitIdleMouseOrbit();
 
     try {
       switch (sectionId) {
@@ -324,7 +341,6 @@ export class AgentCoordinator {
 
   /**
    * SECTION 2: WORKFLOW (#potencialize)
-   * Swarm descends to frame the 4 project cards and mount images
    */
   async buildWorkflowSection() {
     this.engine.updateContainerHeight();
@@ -343,21 +359,21 @@ export class AgentCoordinator {
         agent: grid,
         box: boxes.workflowHeader(),
         tagName: '<section.workflow>',
-        duration: 0.7,
+        duration: 0.65,
         onMaterialize: () => this.heroAnimation.revealWorkflowHeader()
       });
     } else {
       this.heroAnimation.revealWorkflowHeader();
     }
 
-    // 2. Concurrent Cards Construction (Card 1 & 2 in parallel, then 3 & 4)
+    // 2. Concurrent Cards Construction
     const buildCard = async (agent, boxFn, tag, cardIdx, taskId) => {
       if (agent) {
         await this.boxDrawer.drawBox({
           agent: agent,
           box: boxFn(),
           tagName: tag,
-          duration: 0.65,
+          duration: 0.6,
           onMaterialize: () => {
             this.heroAnimation.revealWorkflowCard(cardIdx);
             this.tasks.completeTask(taskId, 'WORKFLOW');
@@ -386,12 +402,12 @@ export class AgentCoordinator {
       this.tasks.completeTask('wf-audit', 'WORKFLOW');
     }
 
-    this.ambientSwarmCluster(document.getElementById('potencialize'));
+    // Return to mouse-following idle orbit
+    this.enterIdleMouseOrbit();
   }
 
   /**
    * SECTION 3: SERVICES (#servicos)
-   * Swarm descends to frame the 3 service cards and mount SVGs
    */
   async buildServicesSection() {
     this.engine.updateContainerHeight();
@@ -407,7 +423,7 @@ export class AgentCoordinator {
         agent: grid,
         box: boxes.servicesHeader(),
         tagName: '<section.services>',
-        duration: 0.7,
+        duration: 0.65,
         onMaterialize: () => this.heroAnimation.revealServicesHeader()
       });
     } else {
@@ -421,7 +437,7 @@ export class AgentCoordinator {
           agent: agent,
           box: boxFn(),
           tagName: tag,
-          duration: 0.7,
+          duration: 0.65,
           onMaterialize: () => {
             this.heroAnimation.revealServiceCard(idx);
             this.tasks.completeTask(taskId, 'SERVICES');
@@ -440,12 +456,11 @@ export class AgentCoordinator {
     ]);
 
     this.tasks.completeTask('srv-style', 'SERVICES');
-    this.ambientSwarmCluster(document.getElementById('servicos'));
+    this.enterIdleMouseOrbit();
   }
 
   /**
    * SECTION 4: CALL TO ACTION (#contato)
-   * Swarm frames the contact proposal and rigs email copy trigger
    */
   async buildCtaSection() {
     this.engine.updateContainerHeight();
@@ -461,7 +476,7 @@ export class AgentCoordinator {
         agent: grid,
         box: boxes.ctaContainer(),
         tagName: '<section.cta>',
-        duration: 0.8,
+        duration: 0.75,
         onMaterialize: () => {
           this.heroAnimation.revealCta();
           this.tasks.completeTask('cta-copy', 'CTA');
@@ -475,7 +490,7 @@ export class AgentCoordinator {
     if (form) {
       form.setAction('RIG CLIPBOARD', 'is-selecting');
       const btnBox = boxes.ctaContactBtn();
-      this.movement.moveTo(form, btnBox.left + 50, btnBox.top + 15, { duration: 0.5 });
+      this.movement.moveTo(form, btnBox.left + 50, btnBox.top + 15, { duration: 0.45 });
       this.tasks.completeTask('cta-button', 'CTA');
     }
 
@@ -484,12 +499,11 @@ export class AgentCoordinator {
       this.tasks.completeTask('cta-motion', 'CTA');
     }
 
-    this.ambientSwarmCluster(document.getElementById('contato'));
+    this.enterIdleMouseOrbit();
   }
 
   /**
-   * SECTION 5: FOOTER (#site-footer)
-   * Swarm frames footer baseline, mounts branding and verifies social links
+   * SECTION 5: FOOTER (#site-footer) & 100% COMPLETION
    */
   async buildFooterSection() {
     this.engine.updateContainerHeight();
@@ -502,13 +516,13 @@ export class AgentCoordinator {
     const teste = this.agent('teste');
     const qa = this.agent('qa');
 
-    // 1. Grid frames entire footer container
+    // 1. Grid frames whole footer container
     if (grid) {
       await this.boxDrawer.drawBox({
         agent: grid,
         box: boxes.footer(),
         tagName: '<footer.site-footer>',
-        duration: 0.7,
+        duration: 0.65,
         onMaterialize: () => {
           this.heroAnimation.revealFooter();
         }
@@ -523,7 +537,7 @@ export class AgentCoordinator {
         agent: icones,
         box: boxes.footerBrand(),
         tagName: '<footer.brand>',
-        duration: 0.6,
+        duration: 0.55,
         onMaterialize: () => {
           this.tasks.completeTask('ft-brand', 'FOOTER');
         }
@@ -536,14 +550,14 @@ export class AgentCoordinator {
     if (foto) {
       foto.setAction('LOGO V', 'is-selecting');
       const symBox = boxes.footerSymbol();
-      this.movement.moveTo(foto, symBox.left + 15, symBox.top + 10, { duration: 0.5 });
+      this.movement.moveTo(foto, symBox.left + 15, symBox.top + 10, { duration: 0.45 });
     }
 
     // 4. Teste tests social links
     if (teste) {
       teste.setAction('TEST SOCIALS', 'is-validating');
       const socBox = boxes.footerSocial();
-      await new Promise(r => this.movement.moveTo(teste, socBox.left + 20, socBox.top + 10, { duration: 0.5, onComplete: r }));
+      await new Promise(r => this.movement.moveTo(teste, socBox.left + 20, socBox.top + 10, { duration: 0.45, onComplete: r }));
       this.tasks.completeTask('ft-social', 'FOOTER');
       teste.setAction('TEST PASSED');
     }
@@ -555,41 +569,78 @@ export class AgentCoordinator {
       qa.setAction('SITE VERIFIED', 'is-validating');
     }
 
-    this.ambientSwarmCluster(document.getElementById('site-footer'));
+    await this.delay(600);
+
+    // 4. Complete cleanup: hide HUD and cursors, reveal replay button
+    this.finishAndEnableRestart();
   }
 
   /**
-   * Places agents into a soft floating cluster around the target section in document coordinates
+   * Enter Idle Mode: Cursors hide labels and form an inward-pointing orbital ring
+   * that follows the visitor's mouse pointer
    */
-  ambientSwarmCluster(targetElementOrY = null) {
-    const activeAgents = this.engine.getActiveAgents();
-    const total = activeAgents.length;
-    const scrollY = window.scrollY || window.pageYOffset || 0;
+  enterIdleMouseOrbit() {
+    const agents = this.engine.getActiveAgents();
+    this.movement.startMouseOrbit(agents, 46);
+  }
 
-    let centerY = scrollY + window.innerHeight * 0.5;
+  /**
+   * Exit Idle Mode: Cursors leave the mouse ring and return to active construction
+   */
+  exitIdleMouseOrbit() {
+    const agents = this.engine.getActiveAgents();
+    this.movement.stopMouseOrbit(agents);
+  }
 
-    if (typeof targetElementOrY === 'number') {
-      centerY = targetElementOrY;
-    } else if (targetElementOrY && targetElementOrY.getBoundingClientRect) {
-      const rect = targetElementOrY.getBoundingClientRect();
-      centerY = rect.top + scrollY + rect.height * 0.5;
-    }
+  /**
+   * On 100% completion: hides build bar and cursors, reveals floating restart button
+   */
+  finishAndEnableRestart() {
+    this.movement.stopMouseOrbit();
+    this.engine.hideAll();
 
-    activeAgents.forEach((ag, i) => {
-      ag.setAction('IDLE');
-      const angle = (i / total) * Math.PI * 2;
-      const rx = window.innerWidth * 0.42;
-      const ry = 160;
-      const targetX = window.innerWidth * 0.5 + Math.cos(angle) * rx;
-      const targetY = centerY + Math.sin(angle) * ry;
+    // Hide HUD build bar
+    const hud = document.getElementById('construction-hud');
+    if (hud) hud.classList.add('is-hidden');
 
-      this.movement.moveTo(ag, targetX, targetY, {
-        duration: 1.2 + (i % 3) * 0.2,
-        ease: 'power2.out',
-        onComplete: () => {
-          this.movement.startAmbientDrift(ag, 18);
-        }
-      });
+    // Show Restart Replay Button
+    const restartBtn = document.getElementById('restart-experience-btn');
+    if (restartBtn) restartBtn.classList.add('is-visible');
+  }
+
+  /**
+   * Initializes Restart Button Click: resets state, scrolls smoothly to top, and restarts Swarm
+   */
+  initRestartButton() {
+    const restartBtn = document.getElementById('restart-experience-btn');
+    if (!restartBtn) return;
+
+    restartBtn.addEventListener('click', async () => {
+      // 1. Hide restart button
+      restartBtn.classList.remove('is-visible');
+
+      // 2. Smoothly scroll to the very top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // 3. Wait for scroll to reach top
+      await this.delay(650);
+
+      // 4. Reset section states and tasks
+      this.builtSections.clear();
+      this.isBuildingSection = false;
+      this.sectionQueue = [];
+
+      this.heroAnimation.initElementStates();
+      this.tasks.reset();
+
+      // 5. Restore HUD
+      const hud = document.getElementById('construction-hud');
+      if (hud) {
+        hud.classList.remove('is-hidden', 'is-completed');
+      }
+
+      // 6. Restart Swarm construction from beginning
+      await this.start();
     });
   }
 
