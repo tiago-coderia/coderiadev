@@ -12,7 +12,7 @@ export class AgentEngine {
   constructor() {
     this.container = document.getElementById('agents-layer');
     this.movement = new AgentMovement();
-    this.boxDrawer = new AgentBoxDrawer(this.container);
+    this.boxDrawer = new AgentBoxDrawer(this.container, this.movement);
     this.agents = new Map();
     this.isMobile = window.innerWidth <= 768;
 

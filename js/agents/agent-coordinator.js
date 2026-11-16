@@ -1,11 +1,14 @@
 /**
  * Coderia.dev — Scroll-Driven Multi-Agent Swarm Coordinator
+ * Orchestrates 7 Core Builder Specialists:
+ * Grid, Layout, Texto, Cor, Foto, UI, Motion
  * 
  * Implements:
  * 1. Strict in-view triggering (zero pre-execution off-screen)
  * 2. Cursors start invisible, appearing right as they execute
- * 3. Idle mouse-following inward orbital ring (hiding tags, matching spec screenshot)
- * 4. 100% completion cleanup (hiding HUD & cursors, showing floating replay icon)
+ * 3. Dynamic idle mouse-following inward orbital ring (hiding tags)
+ * 4. Cursors smoothly depart from the circle to build elements and glide smoothly back (no teleporting)
+ * 5. 100% completion cleanup (hiding HUD & cursors, showing floating restart button)
  */
 
 export class AgentCoordinator {
@@ -66,7 +69,7 @@ export class AgentCoordinator {
     this.tasks.setAgentsCount(activeAgents.length);
     this.tasks.updateHUD(5, 'HERO');
 
-    // Make cursors visible right as execution begins
+    // Make cursors visible right as execution begins with back-out scale
     activeAgents.forEach((ag, idx) => {
       ag.setVisible(true);
       ag.setIdle(false);
@@ -95,15 +98,20 @@ export class AgentCoordinator {
     await this.delay(550);
     this.tasks.completeTask('hero-init', 'HERO');
 
-    // Header Construction
-    const grid = this.agent('grid');
-    const icones = this.agent('icones');
-    const texto = this.agent('texto');
-    const ui = this.agent('ui');
-    const foto = this.agent('foto');
-    const tipo = this.agent('tipo');
-    const cor = this.agent('cor');
+    // Immediately start the signature mouse-following orbital ring!
+    this.enterIdleMouseOrbit();
+    await this.delay(200);
 
+    // 7 Builder Agents
+    const grid = this.agent('grid');
+    const layout = this.agent('layout');
+    const texto = this.agent('texto');
+    const cor = this.agent('cor');
+    const foto = this.agent('foto');
+    const ui = this.agent('ui');
+    const motion = this.agent('motion');
+
+    // 1. Header & Logo Construction
     const promiseHeader = (async () => {
       if (grid) {
         await this.boxDrawer.drawBox({
@@ -123,13 +131,18 @@ export class AgentCoordinator {
     })();
 
     const promiseLogo = (async () => {
-      await this.delay(100);
-      if (icones) {
-        icones.setAction('MOUNT LOGO', 'is-typing');
-        const logoPos = targets.headerLogo();
-        await new Promise(r => this.movement.moveTo(icones, logoPos.x, logoPos.y, { duration: 0.6, onComplete: r }));
-        this.heroAnimation.revealLogo();
-        this.tasks.completeTask('hero-logo', 'HERO');
+      await this.delay(120);
+      if (layout) {
+        await this.boxDrawer.drawBox({
+          agent: layout,
+          box: boxes.headerLogo(),
+          tagName: '<a.brand-logo>',
+          duration: 0.6,
+          onMaterialize: () => {
+            this.heroAnimation.revealLogo();
+            this.tasks.completeTask('hero-logo', 'HERO');
+          }
+        });
       } else {
         this.heroAnimation.revealLogo();
         this.tasks.completeTask('hero-logo', 'HERO');
@@ -138,26 +151,31 @@ export class AgentCoordinator {
 
     await Promise.all([promiseHeader, promiseLogo]);
 
-    // Hero Symbol
+    // 2. Hero Symbol (foto agent mounts the V-symbol)
     if (foto) {
-      foto.setAction('MOUNT SYMBOL', 'is-selecting');
-      const symPos = targets.heroSymbol();
-      await new Promise(r => this.movement.moveTo(foto, symPos.x, symPos.y, { duration: 0.5, onComplete: r }));
-      this.heroAnimation.revealHeroSymbol();
-      this.tasks.completeTask('hero-symbol', 'HERO');
+      await this.boxDrawer.drawBox({
+        agent: foto,
+        box: boxes.heroSymbol(),
+        tagName: '<div.hero-symbol>',
+        duration: 0.6,
+        onMaterialize: () => {
+          this.heroAnimation.revealHeroSymbol();
+          this.tasks.completeTask('hero-symbol', 'HERO');
+        }
+      });
     } else {
       this.heroAnimation.revealHeroSymbol();
       this.tasks.completeTask('hero-symbol', 'HERO');
     }
 
-    // Headline Construction
+    // 3. Headline & Copy Construction
     const promiseHeadline = (async () => {
       if (grid) {
         await this.boxDrawer.drawBox({
           agent: grid,
           box: boxes.headline(),
           tagName: '<h1.hero-headline>',
-          duration: 0.85,
+          duration: 0.8,
           onMaterialize: () => {
             this.heroAnimation.revealHeadline();
             this.tasks.completeTask('hero-headline', 'HERO');
@@ -170,42 +188,46 @@ export class AgentCoordinator {
     })();
 
     const promiseCopy = (async () => {
-      await this.delay(120);
+      await this.delay(100);
       if (texto) {
-        texto.setAction('WRITE HEADLINE', 'is-typing');
-        const headPos = targets.headlineStart();
-        await new Promise(r => this.movement.moveTo(texto, headPos.x + 50, headPos.y + 10, { duration: 0.55, onComplete: r }));
-      }
-      if (tipo) {
-        tipo.setAction('SCALE 7xl', 'is-selecting');
-      }
-      if (cor) {
-        cor.setAction('PAINT GRADIENT', 'is-selecting');
-        const hlBox = boxes.headlineHighlight();
         await this.boxDrawer.drawBox({
-          agent: cor,
-          box: hlBox,
-          tagName: '<span.highlight>',
-          duration: 0.6,
+          agent: texto,
+          box: boxes.description(),
+          tagName: '<p.hero-description>',
+          duration: 0.7,
           onMaterialize: () => {
-            this.heroAnimation.glowHeadlineHighlight();
             this.heroAnimation.revealDescription();
-            this.tasks.completeTask('hero-gradient', 'HERO');
             this.tasks.completeTask('hero-copy', 'HERO');
           }
         });
+      } else {
+        this.heroAnimation.revealDescription();
+        this.tasks.completeTask('hero-copy', 'HERO');
+      }
+
+      if (cor) {
+        await this.boxDrawer.drawBox({
+          agent: cor,
+          box: boxes.headlineHighlight(),
+          tagName: '<span.highlight>',
+          duration: 0.55,
+          onMaterialize: () => {
+            this.heroAnimation.glowHeadlineHighlight();
+            this.tasks.completeTask('hero-gradient', 'HERO');
+          }
+        });
+      } else {
+        this.tasks.completeTask('hero-gradient', 'HERO');
       }
     })();
 
     await Promise.all([promiseHeadline, promiseCopy]);
 
-    // CTA & Showcase Workspace
+    // 4. CTA & Showcase Workspace
     if (ui) {
-      ui.setAction('SHAPE CTA', 'is-selecting');
-      const ctaBox = boxes.primaryCta();
       await this.boxDrawer.drawBox({
         agent: ui,
-        box: ctaBox,
+        box: boxes.primaryCta(),
         tagName: '<button.projects>',
         duration: 0.6,
         onMaterialize: () => {
@@ -213,25 +235,26 @@ export class AgentCoordinator {
           this.tasks.completeTask('hero-cta', 'HERO');
         }
       });
+    } else {
+      this.heroAnimation.revealPrimaryCta();
+      this.tasks.completeTask('hero-cta', 'HERO');
     }
 
     if (grid) {
-      grid.setAction('WORKSPACE FRAME', 'is-selecting');
-      const scBox = boxes.showcaseFrame();
       await this.boxDrawer.drawBox({
         agent: grid,
-        box: scBox,
+        box: boxes.showcaseFrame(),
         tagName: '<div.n8n-showcase>',
-        duration: 0.7,
+        duration: 0.75,
         onMaterialize: () => {
           this.heroAnimation.revealShowcaseFrame();
           this.tasks.completeTask('hero-showcase', 'HERO');
         }
       });
+    } else {
+      this.heroAnimation.revealShowcaseFrame();
+      this.tasks.completeTask('hero-showcase', 'HERO');
     }
-
-    // Enter idle mode: hide tags, form circular ring following visitor mouse!
-    this.enterIdleMouseOrbit();
   }
 
   /**
@@ -265,7 +288,7 @@ export class AgentCoordinator {
       if (el) this.observer.observe(el);
     });
 
-    // Bottom of page scroll check for footer
+    // Fallback bottom of page scroll check for footer
     this.scrollCheckFn = () => {
       const scrollY = window.scrollY || window.pageYOffset || 0;
       const scrollPos = scrollY + window.innerHeight;
@@ -286,7 +309,6 @@ export class AgentCoordinator {
       const el = document.getElementById(id);
       if (el && !this.builtSections.has(id)) {
         const rect = el.getBoundingClientRect();
-        // Only trigger if at least 15% of the section is strictly visible inside viewport
         if (rect.top < window.innerHeight - 80 && rect.bottom > 80) {
           this.queueSection(id);
         }
@@ -309,9 +331,6 @@ export class AgentCoordinator {
   async processSection(sectionId) {
     this.isBuildingSection = true;
     this.activeSection = sectionId;
-
-    // Wake agents up from mouse orbit to execute
-    this.exitIdleMouseOrbit();
 
     try {
       switch (sectionId) {
@@ -349,11 +368,11 @@ export class AgentCoordinator {
 
     const grid = this.agent('grid');
     const foto = this.agent('foto');
-    const texto = this.agent('texto');
     const ui = this.agent('ui');
-    const qa = this.agent('qa');
+    const cor = this.agent('cor');
+    const layout = this.agent('layout');
 
-    // 1. Frame Workflow Header
+    // 1. Frame Workflow Section Header
     if (grid) {
       await this.boxDrawer.drawBox({
         agent: grid,
@@ -366,14 +385,14 @@ export class AgentCoordinator {
       this.heroAnimation.revealWorkflowHeader();
     }
 
-    // 2. Concurrent Cards Construction
+    // 2. Build Card Helper
     const buildCard = async (agent, boxFn, tag, cardIdx, taskId) => {
       if (agent) {
         await this.boxDrawer.drawBox({
           agent: agent,
           box: boxFn(),
           tagName: tag,
-          duration: 0.6,
+          duration: 0.65,
           onMaterialize: () => {
             this.heroAnimation.revealWorkflowCard(cardIdx);
             this.tasks.completeTask(taskId, 'WORKFLOW');
@@ -387,23 +406,15 @@ export class AgentCoordinator {
 
     // Parallel pair 1: Cards 1 & 2
     await Promise.all([
-      buildCard(grid, boxes.workflowCard1, '<card.ai-workflow>', 1, 'wf-card-1'),
-      buildCard(foto, boxes.workflowCard2, '<card.crm-n8n>', 2, 'wf-card-2')
+      buildCard(foto, boxes.workflowCard1, '<card.ai-workflow>', 1, 'wf-card-1'),
+      buildCard(ui, boxes.workflowCard2, '<card.crm-n8n>', 2, 'wf-card-2')
     ]);
 
     // Parallel pair 2: Cards 3 & 4
     await Promise.all([
-      buildCard(ui, boxes.workflowCard3, '<card.analytics-dash>', 3, 'wf-card-3'),
-      buildCard(texto, boxes.workflowCard4, '<card.ecommerce-ai>', 4, 'wf-card-4')
+      buildCard(cor, boxes.workflowCard3, '<card.analytics-dash>', 3, 'wf-card-3'),
+      buildCard(layout, boxes.workflowCard4, '<card.ecommerce-ai>', 4, 'wf-card-4')
     ]);
-
-    if (qa) {
-      qa.setAction('AUDIT WORKFLOW', 'is-validating');
-      this.tasks.completeTask('wf-audit', 'WORKFLOW');
-    }
-
-    // Return to mouse-following idle orbit
-    this.enterIdleMouseOrbit();
   }
 
   /**
@@ -415,9 +426,11 @@ export class AgentCoordinator {
     const boxes = this.hero.getTargetBoxes();
 
     const grid = this.agent('grid');
-    const icones = this.agent('icones');
+    const layout = this.agent('layout');
     const ui = this.agent('ui');
+    const cor = this.agent('cor');
 
+    // 1. Frame Services Header
     if (grid) {
       await this.boxDrawer.drawBox({
         agent: grid,
@@ -430,7 +443,7 @@ export class AgentCoordinator {
       this.heroAnimation.revealServicesHeader();
     }
 
-    // Construct 3 service cards in parallel
+    // 2. Construct 3 service cards in parallel
     const buildService = async (agent, boxFn, tag, idx, taskId) => {
       if (agent) {
         await this.boxDrawer.drawBox({
@@ -450,13 +463,10 @@ export class AgentCoordinator {
     };
 
     await Promise.all([
-      buildService(icones, boxes.serviceCard1, '<card.ai-ml>', 1, 'srv-card-1'),
-      buildService(grid, boxes.serviceCard2, '<card.n8n-auto>', 2, 'srv-card-2'),
-      buildService(ui, boxes.serviceCard3, '<card.fullstack>', 3, 'srv-card-3')
+      buildService(layout, boxes.serviceCard1, '<card.ai-ml>', 1, 'srv-card-1'),
+      buildService(ui, boxes.serviceCard2, '<card.n8n-auto>', 2, 'srv-card-2'),
+      buildService(cor, boxes.serviceCard3, '<card.fullstack>', 3, 'srv-card-3')
     ]);
-
-    this.tasks.completeTask('srv-style', 'SERVICES');
-    this.enterIdleMouseOrbit();
   }
 
   /**
@@ -464,11 +474,10 @@ export class AgentCoordinator {
    */
   async buildCtaSection() {
     this.engine.updateContainerHeight();
-    this.tasks.updateHUD(this.tasks.completeTask('cta-frame', 'CTA'), 'CTA');
     const boxes = this.hero.getTargetBoxes();
 
     const grid = this.agent('grid');
-    const form = this.agent('form');
+    const texto = this.agent('texto');
     const motion = this.agent('motion');
 
     if (grid) {
@@ -479,27 +488,41 @@ export class AgentCoordinator {
         duration: 0.75,
         onMaterialize: () => {
           this.heroAnimation.revealCta();
-          this.tasks.completeTask('cta-copy', 'CTA');
+          this.tasks.completeTask('cta-frame', 'CTA');
         }
       });
     } else {
       this.heroAnimation.revealCta();
+      this.tasks.completeTask('cta-frame', 'CTA');
+    }
+
+    if (texto) {
+      await this.boxDrawer.drawBox({
+        agent: texto,
+        box: boxes.ctaContainer(),
+        tagName: '<p.cta-proposal>',
+        duration: 0.55,
+        onMaterialize: () => {
+          this.tasks.completeTask('cta-copy', 'CTA');
+        }
+      });
+    } else {
       this.tasks.completeTask('cta-copy', 'CTA');
     }
 
-    if (form) {
-      form.setAction('RIG CLIPBOARD', 'is-selecting');
-      const btnBox = boxes.ctaContactBtn();
-      this.movement.moveTo(form, btnBox.left + 50, btnBox.top + 15, { duration: 0.45 });
+    if (motion) {
+      await this.boxDrawer.drawBox({
+        agent: motion,
+        box: boxes.ctaContactBtn(),
+        tagName: '<button.contact-action>',
+        duration: 0.6,
+        onMaterialize: () => {
+          this.tasks.completeTask('cta-button', 'CTA');
+        }
+      });
+    } else {
       this.tasks.completeTask('cta-button', 'CTA');
     }
-
-    if (motion) {
-      motion.setAction('CALIBRATE TOOLTIP', 'is-selecting');
-      this.tasks.completeTask('cta-motion', 'CTA');
-    }
-
-    this.enterIdleMouseOrbit();
   }
 
   /**
@@ -507,14 +530,11 @@ export class AgentCoordinator {
    */
   async buildFooterSection() {
     this.engine.updateContainerHeight();
-    this.tasks.updateHUD(this.tasks.completeTask('ft-frame', 'FOOTER'), 'FOOTER');
     const boxes = this.hero.getTargetBoxes();
 
     const grid = this.agent('grid');
-    const icones = this.agent('icones');
+    const layout = this.agent('layout');
     const foto = this.agent('foto');
-    const teste = this.agent('teste');
-    const qa = this.agent('qa');
 
     // 1. Grid frames whole footer container
     if (grid) {
@@ -525,16 +545,18 @@ export class AgentCoordinator {
         duration: 0.65,
         onMaterialize: () => {
           this.heroAnimation.revealFooter();
+          this.tasks.completeTask('ft-frame', 'FOOTER');
         }
       });
     } else {
       this.heroAnimation.revealFooter();
+      this.tasks.completeTask('ft-frame', 'FOOTER');
     }
 
-    // 2. Ícones frames footer brand logo
-    if (icones) {
+    // 2. Layout frames footer brand logo
+    if (layout) {
       await this.boxDrawer.drawBox({
-        agent: icones,
+        agent: layout,
         box: boxes.footerBrand(),
         tagName: '<footer.brand>',
         duration: 0.55,
@@ -546,32 +568,25 @@ export class AgentCoordinator {
       this.tasks.completeTask('ft-brand', 'FOOTER');
     }
 
-    // 3. Foto frames footer symbol
+    // 3. Foto frames footer symbol & completes site
     if (foto) {
-      foto.setAction('LOGO V', 'is-selecting');
-      const symBox = boxes.footerSymbol();
-      this.movement.moveTo(foto, symBox.left + 15, symBox.top + 10, { duration: 0.45 });
+      await this.boxDrawer.drawBox({
+        agent: foto,
+        box: boxes.footerSymbol(),
+        tagName: '<footer.symbol>',
+        duration: 0.5,
+        onMaterialize: () => {
+          this.tasks.completeTask('site-ready', 'READY');
+        }
+      });
+    } else {
+      this.tasks.completeTask('site-ready', 'READY');
     }
 
-    // 4. Teste tests social links
-    if (teste) {
-      teste.setAction('TEST SOCIALS', 'is-validating');
-      const socBox = boxes.footerSocial();
-      await new Promise(r => this.movement.moveTo(teste, socBox.left + 20, socBox.top + 10, { duration: 0.45, onComplete: r }));
-      this.tasks.completeTask('ft-social', 'FOOTER');
-      teste.setAction('TEST PASSED');
-    }
+    // Full Site Ready (100%)!
+    await this.delay(650);
 
-    // 100% Full Site Ready!
-    this.tasks.completeTask('site-ready', 'READY');
-
-    if (qa) {
-      qa.setAction('SITE VERIFIED', 'is-validating');
-    }
-
-    await this.delay(600);
-
-    // 4. Complete cleanup: hide HUD and cursors, reveal replay button
+    // Complete cleanup: hide HUD and cursors, reveal replay button
     this.finishAndEnableRestart();
   }
 
@@ -581,11 +596,11 @@ export class AgentCoordinator {
    */
   enterIdleMouseOrbit() {
     const agents = this.engine.getActiveAgents();
-    this.movement.startMouseOrbit(agents, 46);
+    this.movement.startMouseOrbit(agents, 44);
   }
 
   /**
-   * Exit Idle Mode: Cursors leave the mouse ring and return to active construction
+   * Exit Idle Mode: Cursors leave the mouse ring
    */
   exitIdleMouseOrbit() {
     const agents = this.engine.getActiveAgents();

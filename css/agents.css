@@ -68,7 +68,8 @@
   white-space: nowrap;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  transition: transform var(--duration-fast) var(--ease-smooth),
+  transition: opacity var(--duration-fast) var(--ease-smooth),
+              transform var(--duration-fast) var(--ease-smooth),
               background-color var(--duration-fast);
 }
 

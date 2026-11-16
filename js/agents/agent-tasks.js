@@ -1,15 +1,16 @@
 /**
- * Coderia.dev — Agent Tasks & Progress Engine (Scroll-Driven Full Site)
- * Computes authentic cumulative progress as the Swarm constructs each section on scroll
+ * Coderia.dev — Agent Tasks & Progress Engine (7 Builder Agents)
+ * Tracks cumulative construction progress for the 7 active builder specialists:
+ * Grid, Layout, Texto, Cor, Foto, UI, Motion
  */
 
 export class AgentTasks {
   constructor() {
     this.tasks = [
       // Section 1: Header + Hero
-      { id: 'hero-init', section: 'HERO', label: '14 AGENTS DEPLOYED', completed: false },
+      { id: 'hero-init', section: 'HERO', label: '7 BUILDER AGENTS DEPLOYED', completed: false },
       { id: 'hero-header', section: 'HERO', label: 'GRID: FRAME HEADER', completed: false },
-      { id: 'hero-logo', section: 'HERO', label: 'ÍCONES: MOUNT LOGO', completed: false },
+      { id: 'hero-logo', section: 'HERO', label: 'LAYOUT: ALIGN BRAND LOGO', completed: false },
       { id: 'hero-symbol', section: 'HERO', label: 'FOTO: MOUNT V-SYMBOL', completed: false },
       { id: 'hero-headline', section: 'HERO', label: 'GRID: FRAME HEADLINE', completed: false },
       { id: 'hero-copy', section: 'HERO', label: 'TEXTO: WRITE HEADLINE & COPY', completed: false },
@@ -19,29 +20,25 @@ export class AgentTasks {
 
       // Section 2: Workflow
       { id: 'wf-header', section: 'WORKFLOW', label: 'GRID: FRAME WORKFLOW SECTION', completed: false },
-      { id: 'wf-card-1', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 1', completed: false },
-      { id: 'wf-card-2', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 2', completed: false },
-      { id: 'wf-card-3', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 3', completed: false },
-      { id: 'wf-card-4', section: 'WORKFLOW', label: 'FOTO: MOUNT WORKFLOW CARD 4', completed: false },
-      { id: 'wf-audit', section: 'WORKFLOW', label: 'QA: AUDIT AUTOMATION GRID', completed: false },
+      { id: 'wf-card-1', section: 'WORKFLOW', label: 'FOTO: MOUNT AI WORKFLOW', completed: false },
+      { id: 'wf-card-2', section: 'WORKFLOW', label: 'UI: MOUNT CRM AUTOMATION', completed: false },
+      { id: 'wf-card-3', section: 'WORKFLOW', label: 'COR: MOUNT ANALYTICS DASHBOARD', completed: false },
+      { id: 'wf-card-4', section: 'WORKFLOW', label: 'LAYOUT: MOUNT ECOMMERCE AI', completed: false },
 
       // Section 3: Services
       { id: 'srv-header', section: 'SERVICES', label: 'GRID: FRAME SERVICES SECTION', completed: false },
-      { id: 'srv-card-1', section: 'SERVICES', label: 'ÍCONES: MOUNT AI ICON 1', completed: false },
-      { id: 'srv-card-2', section: 'SERVICES', label: 'ÍCONES: MOUNT N8N ICON 2', completed: false },
-      { id: 'srv-card-3', section: 'SERVICES', label: 'ÍCONES: MOUNT DEV ICON 3', completed: false },
-      { id: 'srv-style', section: 'SERVICES', label: 'UI: SHAPE SERVICE SURFACES', completed: false },
+      { id: 'srv-card-1', section: 'SERVICES', label: 'LAYOUT: SHAPE AI & ML CARD', completed: false },
+      { id: 'srv-card-2', section: 'SERVICES', label: 'UI: SHAPE N8N WORKFLOW CARD', completed: false },
+      { id: 'srv-card-3', section: 'SERVICES', label: 'COR: SHAPE FULLSTACK DEV CARD', completed: false },
 
       // Section 4: CTA
       { id: 'cta-frame', section: 'CTA', label: 'GRID: FRAME CONTACT SECTION', completed: false },
       { id: 'cta-copy', section: 'CTA', label: 'TEXTO: STREAM PROPOSAL COPY', completed: false },
-      { id: 'cta-button', section: 'CTA', label: 'FORM: RIG EMAIL CLIPBOARD', completed: false },
-      { id: 'cta-motion', section: 'CTA', label: 'MOTION: CALIBRATE HOVER TOOLTIP', completed: false },
+      { id: 'cta-button', section: 'CTA', label: 'MOTION: CALIBRATE ACTION TRIGGERS', completed: false },
 
       // Section 5: Footer
       { id: 'ft-frame', section: 'FOOTER', label: 'GRID: FRAME FOOTER BASELINE', completed: false },
-      { id: 'ft-brand', section: 'FOOTER', label: 'ÍCONES: MOUNT FOOTER BRANDING', completed: false },
-      { id: 'ft-social', section: 'FOOTER', label: 'TESTE: PROBE SOCIAL DESTINATIONS', completed: false },
+      { id: 'ft-brand', section: 'FOOTER', label: 'LAYOUT: ALIGN FOOTER BRANDING', completed: false },
       { id: 'site-ready', section: 'READY', label: 'FULL SITE ASSEMBLED', completed: false }
     ];
 
@@ -82,7 +79,7 @@ export class AgentTasks {
 
     if (percent >= 100) {
       if (this.hudTitle) this.hudTitle.textContent = 'INTERFACE READY';
-      if (this.hudAgentsCount) this.hudAgentsCount.textContent = 'ALL 14 AGENTS VERIFIED';
+      if (this.hudAgentsCount) this.hudAgentsCount.textContent = '7 BUILDERS VERIFIED';
       if (this.hudElement) this.hudElement.classList.add('is-completed');
     } else {
       if (this.hudTitle) this.hudTitle.textContent = `BUILDING: ${phaseLabel}`;
@@ -92,11 +89,16 @@ export class AgentTasks {
 
   setAgentsCount(count) {
     if (this.hudAgentsCount && !this.isCompleted()) {
-      this.hudAgentsCount.textContent = `${count} AGENTS ACTIVE`;
+      this.hudAgentsCount.textContent = `${count} BUILDER AGENTS`;
     }
   }
 
   isCompleted() {
     return this.tasks.every(t => t.completed);
+  }
+
+  reset() {
+    this.tasks.forEach(t => t.completed = false);
+    this.updateHUD(0, 'HERO');
   }
 }

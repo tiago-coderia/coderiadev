@@ -15,8 +15,14 @@
 - [x] T02-02: Implement completion transition: hide HUD and cursors, fade in replay button
 - [x] T02-03: Implement replay button click handler (scroll to top, reset DOM and task states, restart swarm)
 
-## Task Group 3: Verification & Git Commit
-- [x] T03-01: Verify in-view trigger behavior on scroll
-- [x] T03-02: Verify idle mouse-following ring and inward rotation
-- [x] T03-03: Verify 100% completion cleanup and restart functionality
-- [x] T03-04: Commit changes with git
+## Task Group 3: 7 Builder Agents & Smooth Trajectories (Current Turn)
+- [x] T03-01: Reduce roster to 7 pure builder specialists (`grid`, `layout`, `texto`, `cor`, `foto`, `ui`, `motion`) in `agents.config.js` and `agent-tasks.js`
+- [x] T03-02: Fix scroll-freeze bug with live `window.scrollY` sampling on every frame in `agent-movement.js`
+- [x] T03-03: Implement smooth departure from orbit to element anchor and smooth return back into orbit in `agent-box-drawer.js` and `agent-movement.js`
+- [x] T03-04: Wire all 5 sections in `agent-coordinator.js` to utilize the 7 builder specialists without interrupting orbit for idle agents
+
+## Task Group 4: Verification & Git Commit
+- [x] T04-01: Verify in-view trigger behavior on scroll
+- [x] T04-02: Verify idle mouse-following ring and inward rotation
+- [x] T04-03: Verify 100% completion cleanup and restart functionality
+- [x] T04-04: Test entire page flow end-to-end and report findings
