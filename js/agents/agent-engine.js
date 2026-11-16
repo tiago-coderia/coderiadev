@@ -22,8 +22,9 @@ export class AgentEngine {
 
   initAgents() {
     if (!this.container) return;
+    this.updateContainerHeight();
 
-    // Filter agents according to viewport (culls to 3 agents on mobile)
+    // Filter agents according to viewport (culls to essential agents on mobile)
     const profiles = AGENT_PROFILES.filter(profile => {
       if (this.isMobile) {
         return profile.mobileActive;
@@ -35,6 +36,17 @@ export class AgentEngine {
       const cursor = new AgentCursor(profile, this.container);
       this.agents.set(profile.id, cursor);
     });
+  }
+
+  updateContainerHeight() {
+    if (!this.container) return;
+    const docHeight = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight
+    );
+    this.container.style.height = `${docHeight}px`;
   }
 
   getAgent(id) {
@@ -52,6 +64,7 @@ export class AgentEngine {
   bindResize() {
     let resizeTimer = null;
     window.addEventListener('resize', () => {
+      this.updateContainerHeight();
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
         const currentlyMobile = window.innerWidth <= 768;

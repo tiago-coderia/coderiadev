@@ -1,6 +1,7 @@
 /**
  * Coderia.dev — Section Targets & Coordinate Resolver
- * Resolves live viewport bounding boxes and coordinates for all sections (Header, Hero, Workflow, Services, CTA, Footer)
+ * Resolves exact page/document coordinates (accounting for scroll) for all sections:
+ * Header, Hero, Workflow, Services, CTA, and Footer
  */
 
 export class Hero {
@@ -16,31 +17,45 @@ export class Hero {
   }
 
   /**
-   * Retrieves the current viewport position of a target element
+   * Retrieves the document position (accounting for window scroll) of a target element
    */
   getElementAnchor(element, offsetX = 0.5, offsetY = 0.5) {
+    const scrollX = window.scrollX || window.pageXOffset || 0;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+
     if (!element) {
-      return { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5 };
+      return { x: window.innerWidth * 0.5, y: scrollY + window.innerHeight * 0.5 };
     }
     const rect = element.getBoundingClientRect();
     return {
-      x: rect.left + rect.width * offsetX,
-      y: rect.top + rect.height * offsetY
+      x: Math.round(rect.left + scrollX + rect.width * offsetX),
+      y: Math.round(rect.top + scrollY + rect.height * offsetY)
     };
   }
 
   /**
-   * Retrieves the exact bounding box of a target element in viewport coordinates
+   * Retrieves the exact bounding box of a target element in document coordinates
+   * (anchored to the document flow so it never floats on scroll)
    */
   getElementBox(element, padding = 4) {
+    const scrollX = window.scrollX || window.pageXOffset || 0;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+
     if (!element) {
-      return { left: 0, top: 0, width: 100, height: 40, right: 100, bottom: 40 };
+      return { 
+        left: 0, 
+        top: scrollY, 
+        width: 100, 
+        height: 40, 
+        right: 100, 
+        bottom: scrollY + 40 
+      };
     }
     const rect = element.getBoundingClientRect();
-    const left = Math.max(0, rect.left - padding);
-    const top = Math.max(0, rect.top - padding);
-    const width = Math.max(20, rect.width + padding * 2);
-    const height = Math.max(16, rect.height + padding * 2);
+    const left = Math.round(rect.left + scrollX - padding);
+    const top = Math.round(rect.top + scrollY - padding);
+    const width = Math.round(rect.width + padding * 2);
+    const height = Math.round(rect.height + padding * 2);
     return {
       left,
       top,
@@ -85,6 +100,7 @@ export class Hero {
       ctaContactBtn: () => this.getElementBox(document.getElementById('cta-contact-btn'), 4),
 
       // Footer
+      footer: () => this.getElementBox(document.getElementById('site-footer'), 0),
       footerBrand: () => this.getElementBox(document.getElementById('footer-brand'), 6),
       footerSymbol: () => this.getElementBox(document.getElementById('footer-symbol'), 4),
       footerSocial: () => this.getElementBox(document.getElementById('footer-social-links'), 6)
@@ -101,7 +117,12 @@ export class Hero {
       headlineHighlight: () => this.getElementAnchor(this.headlineHighlight, 0.5, 0.5),
       description: () => this.getElementAnchor(this.description, 0.3, 0.5),
       primaryCta: () => this.getElementAnchor(this.primaryCta, 0.5, 0.5),
-      showcaseFrame: () => this.getElementAnchor(this.showcaseFrame, 0.5, 0.5)
+      showcaseFrame: () => this.getElementAnchor(this.showcaseFrame, 0.5, 0.5),
+      
+      // Footer anchors
+      footerBrand: () => this.getElementAnchor(document.getElementById('footer-brand'), 0.5, 0.5),
+      footerSymbol: () => this.getElementAnchor(document.getElementById('footer-symbol'), 0.5, 0.5),
+      footerSocial: () => this.getElementAnchor(document.getElementById('footer-social-links'), 0.5, 0.5)
     };
   }
 }

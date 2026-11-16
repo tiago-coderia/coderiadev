@@ -1,6 +1,7 @@
 /**
  * Coderia.dev — Scroll-Driven Multi-Agent Swarm Coordinator
- * Drives real-time collaborative construction section-by-section as the user scrolls
+ * Drives real-time collaborative construction section-by-section as the user scrolls,
+ * anchoring bounding boxes and agent cursors directly to document coordinates (no floating).
  */
 
 export class AgentCoordinator {
@@ -15,6 +16,8 @@ export class AgentCoordinator {
 
     this.builtSections = new Set();
     this.activeSection = null;
+    this.isBuildingSection = false;
+    this.sectionQueue = [];
   }
 
   async start() {
@@ -26,8 +29,11 @@ export class AgentCoordinator {
     // 1. Build initial Viewport (Header + Hero)
     await this.buildHeroSection();
 
-    // 2. Attach Scroll Observers for remaining sections
+    // 2. Attach Scroll Observers and scroll listeners for remaining sections
     this.initScrollObservers();
+
+    // 3. Check if any section is already in view (e.g. page refresh midway)
+    this.checkVisibleSections();
   }
 
   delay(ms) {
@@ -43,6 +49,8 @@ export class AgentCoordinator {
    */
   async buildHeroSection() {
     this.builtSections.add('hero');
+    this.engine.updateContainerHeight();
+
     const boxes = this.hero.getTargetBoxes();
     const targets = this.hero.getTargetPositions();
     const gsap = window.gsap;
@@ -86,7 +94,6 @@ export class AgentCoordinator {
     const foto = this.agent('foto');
     const tipo = this.agent('tipo');
     const cor = this.agent('cor');
-    const motion = this.agent('motion');
 
     const promiseHeader = (async () => {
       if (grid) {
@@ -214,18 +221,18 @@ export class AgentCoordinator {
       });
     }
 
-    // Settle into ambient idle while user explores Hero
-    this.ambientSwarmCluster(window.innerHeight * 0.45);
+    // Settle into ambient idle anchored around Hero
+    this.ambientSwarmCluster(document.getElementById('hero'));
   }
 
   /**
-   * ATTACH INTERSECTION OBSERVERS FOR SCROLL-DRIVEN SECTIONS
+   * ATTACH INTERSECTION OBSERVERS AND SCROLL LISTENERS
    */
   initScrollObservers() {
     const observerOptions = {
       root: null,
-      rootMargin: '0px 0px -15% 0px',
-      threshold: 0.15
+      rootMargin: '150px 0px 50px 0px',
+      threshold: [0, 0.05, 0.1]
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -233,7 +240,7 @@ export class AgentCoordinator {
         if (entry.isIntersecting) {
           const sectionId = entry.target.id;
           if (!this.builtSections.has(sectionId)) {
-            this.onSectionEnter(sectionId);
+            this.queueSection(sectionId);
           }
         }
       });
@@ -243,25 +250,75 @@ export class AgentCoordinator {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
+
+    // Fallback scroll listener: if user scrolls near bottom of page, build footer
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const scrollPos = scrollY + window.innerHeight;
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight
+      );
+
+      if (scrollPos >= docHeight - 250) {
+        if (!this.builtSections.has('site-footer')) {
+          this.queueSection('site-footer');
+        }
+      }
+    }, { passive: true });
   }
 
-  async onSectionEnter(sectionId) {
+  checkVisibleSections() {
+    ['potencialize', 'servicos', 'contato', 'site-footer'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !this.builtSections.has(id)) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight + 100 && rect.bottom > 0) {
+          this.queueSection(id);
+        }
+      }
+    });
+  }
+
+  queueSection(sectionId) {
+    if (this.builtSections.has(sectionId)) return;
     this.builtSections.add(sectionId);
+
+    if (this.isBuildingSection) {
+      this.sectionQueue.push(sectionId);
+      return;
+    }
+
+    this.processSection(sectionId);
+  }
+
+  async processSection(sectionId) {
+    this.isBuildingSection = true;
     this.activeSection = sectionId;
 
-    switch (sectionId) {
-      case 'potencialize':
-        await this.buildWorkflowSection();
-        break;
-      case 'servicos':
-        await this.buildServicesSection();
-        break;
-      case 'contato':
-        await this.buildCtaSection();
-        break;
-      case 'site-footer':
-        await this.buildFooterSection();
-        break;
+    try {
+      switch (sectionId) {
+        case 'potencialize':
+          await this.buildWorkflowSection();
+          break;
+        case 'servicos':
+          await this.buildServicesSection();
+          break;
+        case 'contato':
+          await this.buildCtaSection();
+          break;
+        case 'site-footer':
+          await this.buildFooterSection();
+          break;
+      }
+    } catch (err) {
+      console.warn(`Error building section ${sectionId}:`, err);
+    } finally {
+      this.isBuildingSection = false;
+      if (this.sectionQueue.length > 0) {
+        const nextId = this.sectionQueue.shift();
+        this.processSection(nextId);
+      }
     }
   }
 
@@ -270,6 +327,7 @@ export class AgentCoordinator {
    * Swarm descends to frame the 4 project cards and mount images
    */
   async buildWorkflowSection() {
+    this.engine.updateContainerHeight();
     this.tasks.updateHUD(this.tasks.completeTask('wf-header', 'WORKFLOW'), 'WORKFLOW');
     const boxes = this.hero.getTargetBoxes();
 
@@ -328,7 +386,7 @@ export class AgentCoordinator {
       this.tasks.completeTask('wf-audit', 'WORKFLOW');
     }
 
-    this.ambientSwarmCluster(window.innerHeight * 0.5);
+    this.ambientSwarmCluster(document.getElementById('potencialize'));
   }
 
   /**
@@ -336,13 +394,13 @@ export class AgentCoordinator {
    * Swarm descends to frame the 3 service cards and mount SVGs
    */
   async buildServicesSection() {
+    this.engine.updateContainerHeight();
     this.tasks.updateHUD(this.tasks.completeTask('srv-header', 'SERVICES'), 'SERVICES');
     const boxes = this.hero.getTargetBoxes();
 
     const grid = this.agent('grid');
     const icones = this.agent('icones');
     const ui = this.agent('ui');
-    const texto = this.agent('texto');
 
     if (grid) {
       await this.boxDrawer.drawBox({
@@ -382,7 +440,7 @@ export class AgentCoordinator {
     ]);
 
     this.tasks.completeTask('srv-style', 'SERVICES');
-    this.ambientSwarmCluster(window.innerHeight * 0.5);
+    this.ambientSwarmCluster(document.getElementById('servicos'));
   }
 
   /**
@@ -390,11 +448,11 @@ export class AgentCoordinator {
    * Swarm frames the contact proposal and rigs email copy trigger
    */
   async buildCtaSection() {
+    this.engine.updateContainerHeight();
     this.tasks.updateHUD(this.tasks.completeTask('cta-frame', 'CTA'), 'CTA');
     const boxes = this.hero.getTargetBoxes();
 
     const grid = this.agent('grid');
-    const texto = this.agent('texto');
     const form = this.agent('form');
     const motion = this.agent('motion');
 
@@ -426,40 +484,68 @@ export class AgentCoordinator {
       this.tasks.completeTask('cta-motion', 'CTA');
     }
 
-    this.ambientSwarmCluster(window.innerHeight * 0.5);
+    this.ambientSwarmCluster(document.getElementById('contato'));
   }
 
   /**
    * SECTION 5: FOOTER (#site-footer)
-   * Swarm frames footer, mounts branding and verifies social links
+   * Swarm frames footer baseline, mounts branding and verifies social links
    */
   async buildFooterSection() {
+    this.engine.updateContainerHeight();
     this.tasks.updateHUD(this.tasks.completeTask('ft-frame', 'FOOTER'), 'FOOTER');
     const boxes = this.hero.getTargetBoxes();
 
+    const grid = this.agent('grid');
     const icones = this.agent('icones');
+    const foto = this.agent('foto');
     const teste = this.agent('teste');
     const qa = this.agent('qa');
 
+    // 1. Grid frames entire footer container
+    if (grid) {
+      await this.boxDrawer.drawBox({
+        agent: grid,
+        box: boxes.footer(),
+        tagName: '<footer.site-footer>',
+        duration: 0.7,
+        onMaterialize: () => {
+          this.heroAnimation.revealFooter();
+        }
+      });
+    } else {
+      this.heroAnimation.revealFooter();
+    }
+
+    // 2. Ícones frames footer brand logo
     if (icones) {
       await this.boxDrawer.drawBox({
         agent: icones,
         box: boxes.footerBrand(),
         tagName: '<footer.brand>',
-        duration: 0.65,
+        duration: 0.6,
         onMaterialize: () => {
-          this.heroAnimation.revealFooter();
           this.tasks.completeTask('ft-brand', 'FOOTER');
         }
       });
     } else {
-      this.heroAnimation.revealFooter();
       this.tasks.completeTask('ft-brand', 'FOOTER');
     }
 
+    // 3. Foto frames footer symbol
+    if (foto) {
+      foto.setAction('LOGO V', 'is-selecting');
+      const symBox = boxes.footerSymbol();
+      this.movement.moveTo(foto, symBox.left + 15, symBox.top + 10, { duration: 0.5 });
+    }
+
+    // 4. Teste tests social links
     if (teste) {
       teste.setAction('TEST SOCIALS', 'is-validating');
+      const socBox = boxes.footerSocial();
+      await new Promise(r => this.movement.moveTo(teste, socBox.left + 20, socBox.top + 10, { duration: 0.5, onComplete: r }));
       this.tasks.completeTask('ft-social', 'FOOTER');
+      teste.setAction('TEST PASSED');
     }
 
     // 100% Full Site Ready!
@@ -469,21 +555,31 @@ export class AgentCoordinator {
       qa.setAction('SITE VERIFIED', 'is-validating');
     }
 
-    this.ambientSwarmCluster(window.innerHeight * 0.6);
+    this.ambientSwarmCluster(document.getElementById('site-footer'));
   }
 
   /**
-   * Places agents into a soft floating cluster around the visible viewport center
+   * Places agents into a soft floating cluster around the target section in document coordinates
    */
-  ambientSwarmCluster(centerY = window.innerHeight * 0.5) {
+  ambientSwarmCluster(targetElementOrY = null) {
     const activeAgents = this.engine.getActiveAgents();
     const total = activeAgents.length;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+
+    let centerY = scrollY + window.innerHeight * 0.5;
+
+    if (typeof targetElementOrY === 'number') {
+      centerY = targetElementOrY;
+    } else if (targetElementOrY && targetElementOrY.getBoundingClientRect) {
+      const rect = targetElementOrY.getBoundingClientRect();
+      centerY = rect.top + scrollY + rect.height * 0.5;
+    }
 
     activeAgents.forEach((ag, i) => {
       ag.setAction('IDLE');
       const angle = (i / total) * Math.PI * 2;
       const rx = window.innerWidth * 0.42;
-      const ry = window.innerHeight * 0.32;
+      const ry = 160;
       const targetX = window.innerWidth * 0.5 + Math.cos(angle) * rx;
       const targetY = centerY + Math.sin(angle) * ry;
 
