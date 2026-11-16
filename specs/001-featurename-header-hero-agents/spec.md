@@ -1,36 +1,47 @@
-# Feature Specification: Coderia.dev — Header & Hero Section with Swarm Multi-Agent System
+# Feature Specification: Coderia.dev — 14-Agent Collaborative Swarm System
 
 **Feature Branch**: `001-featurename-header-hero-agents`
-**Status**: Approved (Updated with Real-Time Wireframe Box Drawing)
-**Input**: Coderia.dev Institutional Website - Multi-Agent Construction System matching Swarm Rebuild (Joel Califa / Dhvanil Patel concept)
+**Status**: Approved (Expanded to 14 Specialized Agents with Concurrent Assembly)
+**Input**: Multi-agent Swarm Rebuild with 14 simultaneous specialist agents ('Layout', 'Tipo', 'Cor', 'Grid', 'Foto', 'Texto', 'UI', 'Dados', 'Motion', 'Teste', 'CSS', 'Ícones', 'QA', 'Form')
 
 ---
 
 ## 1. Executive Summary & Concept
 
-Coderia.dev is an independent digital engineering studio ("Digital experiences engineered with intelligence"). The centerpiece of the user experience is a real-time visual choreography inspired by Swarm Rebuild, where autonomous agent cursors actively drag, draw bounding boxes (Figma/design-tool wireframe frames with dimensions and tag callouts), and materialize interface components in real time.
-
-Key Additions:
-- **Wireframe Box Drawing Engine**: Before any DOM element appears, an agent moves to its top-left origin, clicks/anchors, and drags down-right to physically draw out the element's bounding box frame in real time.
-- **Design-Tool Bounding Box Metadata**: Drawn boxes exhibit dashed accent borders, semi-transparent colored fills, corner selection handles, and live dimension tags (e.g. `w: 920 h: 140 • <h1.hero-headline>`).
-- **Materialization Transition**: Once the bounding box reaches full target dimensions, the styled component smoothly renders within it, and the wireframe frame dissolves into the final component styling.
+Coderia.dev's interface is constructed not by 1 or 2 isolated cursors, but by an active **14-agent multiplayer design team** working concurrently across the screen:
+- **Grid**: Draws the physical wireframe bounding boxes where elements will live.
+- **Texto**: Injects and types copy, headlines, and descriptions.
+- **Tipo**: Adjusts font scales, line-heights, and typographic hierarchy.
+- **Cor**: Paints colors, gradients, and visual highlights.
+- **UI**: Shapes buttons, borders, border-radii, and surface materials.
+- **CSS**: Calibrates paddings, margins, and flex alignment.
+- **Ícones**: Positions SVG vectors, symbols, and icons.
+- **Foto**: Mounts badges, media indicators, and visual assets.
+- **Layout**: Sets structural containers, headers, and section flow.
+- **Dados**: Injects metadata, studio specs, and telemetry.
+- **Form**: Rigs contact buttons and interactive form triggers.
+- **Motion**: Calibrates springs, hover physics, and transitions.
+- **Teste**: Simulates live clicks, hover tests, and interaction bounds.
+- **QA**: Audits geometry and stamps green verification passes.
 
 ---
 
-## 2. User Scenarios & Acceptance Criteria (Spec Kit)
+## 2. Collaborative Multi-Agent Workflow
 
-### User Story 1 - Real-Time Bounding Box Drawing & Swarm Construction (Priority: P1)
-As a visitor to Coderia.dev, I want to see the agent cursors actively drawing dashed bounding boxes with live dimensions for each layout component (header, nav items, headline, CTAs) before materializing the final content, so that the website authentically mirrors multiplayer design tool engineering (Swarm Rebuild style).
-
-- **Independent Test**: Load page with standard motion settings. Watch agents anchor and drag diagonal boxes for the header, headline, supporting copy, and CTAs, showing real-time dimension tags and corner handles before content pops in.
-- **Acceptance Scenarios**:
-  1. **Given** page load, **When** Phase 02 (Structure) begins, **Then** ARCHITECT and LAYOUT drag out the header bar and main hero container bounding box with corner handles and dimensions.
-  2. **Given** Phase 03 (Typography), **When** TYPOGRAPHY builds the headline, **Then** the cursor drags a bounding box across the headline area showing `<h1.hero-headline>`, followed by the text animating in.
-  3. **Given** Phase 04 (Visual Engineering), **When** MOTION/FRONTEND builds the CTAs, **Then** cursors drag button-sized bounding boxes for "Explore our work" and "Let's talk", followed by button rendering.
-  4. **Given** any drawn box, **When** completed, **Then** the wireframe border smoothly dissolves as the element materializes.
-
-### User Story 2 - Semantic Header & Navigation (Priority: P2)
-As a visitor on any device, I want a clean, minimalist header with accessible navigation and a clear call-to-action button, with mobile drawer support.
-
-### User Story 3 - Hero Composition & Typographic Impact (Priority: P3)
-As a client or developer, I want to experience an elegant, typography-driven hero layout with generous whitespace, crisp hierarchy, and clear CTAs.
+Instead of strictly sequential single-agent steps, agents work in **concurrent choreographies**:
+1. **Header Assembly (Concurrent)**:
+   - `Grid` draws the header box while `Layout` coordinates baseline width.
+   - `Ícones` anchors `< />` symbol, `Texto` writes `CODERIA.DEV`, and `Cor` applies the cyan brand highlight.
+   - `CSS` sets flex spacing for navigation links, `Tipo` sets font sizes, and `UI` styles the "Let's Talk" CTA.
+2. **Hero Composition (Concurrent)**:
+   - `Grid` draws the eyebrow box; `Foto` sets the status dot, `Texto` writes `INDEPENDENT DIGITAL ENGINEERING STUDIO`.
+   - `Grid` draws the massive headline frame (`880 × 140`); `Texto` streams headline copy; `Tipo` configures clamp scales; `Cor` paints the glowing gradient on `"digital experiences"`.
+   - `Grid` draws the description box; `Texto` and `CSS` format the supporting paragraph.
+3. **CTAs & Specification Badge (Concurrent)**:
+   - `Grid` draws button frames; `UI` shapes pill curves; `Ícones` mounts the arrow SVG; `Motion` tests hover springs; `Form` wires the click targets.
+   - `Dados` and `Foto` mount the `DESIGNING • ENGINEERING • BUILDING` badge.
+4. **Verification & Testing (Concurrent)**:
+   - `Teste` triggers micro-press animations on buttons and links.
+   - `QA` inspects all components and places certified check indicators.
+5. **HUD Progress**:
+   - Accurately tracks all 14 agents, displaying `14 AGENTS ACTIVE` and calculating percentage based on parallel tasks.

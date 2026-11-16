@@ -26,14 +26,21 @@
   --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Agent Colors */
-  --agent-architect: #3b82f6;  /* Blue */
-  --agent-designer:  #a855f7;  /* Purple */
-  --agent-typography:#ec4899;  /* Pink */
-  --agent-layout:    #10b981;  /* Green */
-  --agent-motion:    #f97316;  /* Orange */
-  --agent-frontend:  #06b6d4;  /* Cyan */
-  --agent-qa:        #ef4444;  /* Red */
+  /* 14 Agent Specialist Colors */
+  --agent-grid:    #3b82f6;  /* Blue */
+  --agent-layout:  #10b981;  /* Emerald Green */
+  --agent-texto:   #06b6d4;  /* Cyan */
+  --agent-tipo:    #ec4899;  /* Hot Pink */
+  --agent-cor:     #a855f7;  /* Purple */
+  --agent-ui:      #eab308;  /* Amber */
+  --agent-css:     #6366f1;  /* Indigo */
+  --agent-icones:  #14b8a6;  /* Teal */
+  --agent-foto:    #f43f5e;  /* Rose */
+  --agent-dados:   #8b5cf6;  /* Violet */
+  --agent-form:    #84cc16;  /* Lime */
+  --agent-motion:  #f97316;  /* Vivid Orange */
+  --agent-teste:   #0ea5e9;  /* Sky Blue */
+  --agent-qa:      #ef4444;  /* Red */
 
   /* UI Glows & Highlights */
   --accent-glow: rgba(59, 130, 246, 0.15);

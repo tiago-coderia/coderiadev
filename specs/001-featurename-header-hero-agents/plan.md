@@ -1,42 +1,45 @@
-# Implementation Plan: Coderia.dev — Header & Hero Section with Swarm Multi-Agent System
+# Implementation Plan: Coderia.dev — 14-Agent Concurrent Swarm System
 
 **Feature Branch**: `001-featurename-header-hero-agents`
-**Status**: In Progress (Adding Wireframe Box Drawing Engine)
+**Status**: Ready
 **Architecture Style**: Pure Vanilla Modular (HTML5 + CSS3 + ES6+ Modules + GSAP + Motion)
 
 ---
 
-## 1. Technical Architecture & Separation of Concerns
+## 1. 14-Agent Roster & Specializations
 
-### Wireframe Bounding Box Drawing System
-To match the signature Swarm Rebuild / multiplayer design tool aesthetic:
-1. **Dynamic Bounding Box Creation (`js/agents/agent-box-drawer.js`)**:
-   - Manages interactive canvas/DOM wireframe boxes:
-     - Outer container placed in `#agents-layer`.
-     - Styling: `border: 1px dashed <agent-color>`, `background: rgba(<agent-color>, 0.08)`.
-     - 4 corner handles (`width: 5px, height: 5px`, matching design tools like Figma).
-     - Floating dimension / tag badge: e.g. `<h1.hero-headline> 840×120` positioned above top-left corner.
-2. **Coordinated Drag Animation**:
-   - Cursor starts at element's `(rect.left, rect.top)`.
-   - Cursor drags to `(rect.right, rect.bottom)` using GSAP tween.
-   - On each frame of the tween (`onUpdate`), the box's `width` and `height` update to track the cursor's current position, and the dimension label updates its pixel values dynamically!
-   - When the drag finishes, the target DOM element inside the page is revealed, and the dashed wireframe box fades out smoothly.
+| Agent | Role | Accent Color | Primary Choreography Action |
+|---|---|---|---|
+| **Grid** | Frame & Wireframe Box | `#3b82f6` (Blue) | Draws real-time bounding boxes with dimensions |
+| **Layout** | Layout & Alignment | `#10b981` (Green) | Establishes container grids and header bar |
+| **Texto** | Copy & Text Ingestion | `#06b6d4` (Cyan) | Streams in headline, eyebrow, and descriptions |
+| **Tipo** | Typography Hierarchy | `#ec4899` (Pink) | Adjusts letter-spacing, clamp fonts, and font-weights |
+| **Cor** | Color & Gradients | `#a855f7` (Purple) | Paints cyan/violet gradient on "digital experiences" |
+| **UI** | Components & Surfaces | `#eab308` (Amber) | Shapes button borders, border-radius, and glass backgrounds |
+| **CSS** | Style Properties | `#6366f1` (Indigo) | Applies padding, gaps, flex alignment, and box-shadows |
+| **Ícones** | SVG & Symbols | `#14b8a6` (Teal) | Injects `< / >` logo symbol and CTA arrow SVG |
+| **Foto** | Assets & Badges | `#f43f5e` (Rose) | Sets indicator dots and studio media badges |
+| **Dados** | Metadata & Specs | `#8b5cf6` (Violet) | Anchors studio specs and telemetry |
+| **Form** | Forms & Triggers | `#84cc16` (Lime) | Wires contact links and accessible triggers |
+| **Motion** | Spring Physics | `#f97316` (Orange) | Calibrates button hover easing and bounce feedback |
+| **Teste** | Interactive Testing | `#0ea5e9` (Sky Blue) | Simulates automated clicks, hover tests, and bounds checks |
+| **QA** | Quality Assurance | `#ef4444` (Red) | Audits geometric compliance and green checks |
 
-### Updated File Structure
-```text
-coderia/
-│
-├── css/
-│   ├── ...
-│   └── agents.css               # Added wireframe bounding box, corner handles, dimension chips
-│
-└── js/
-    ├── agents/
-    │   ├── agent-engine.js      # Mounts box drawer & agents
-    │   ├── agent-box-drawer.js  # Dedicated engine for creating, dragging, and sizing wireframe boxes
-    │   ├── agent-cursor.js
-    │   ├── agent-movement.js
-    │   ├── agent-tasks.js
-    │   └── agent-coordinator.js # Coordinates drag-box creation before revealing each element
-    └── ...
-```
+---
+
+## 2. Dynamic Parallel Execution Architecture
+
+To ensure high visual dynamism with multiple agents visibly working simultaneously:
+- **`Promise.all` Staged Fan-Out**: Multiple agent tasks run in parallel across different DOM clusters.
+- **Concurrent Box & Content Assembly**: While `Grid` is drawing a box in one sector, `Texto` and `Cor` are already finishing another, and `Layout` and `CSS` are calibrating layout guides.
+- **Micro-Action Callout Badges**: Each agent cursor displays its specific domain action:
+  - `Grid`: `[BOX 880x140]`
+  - `Texto`: `[TYPING COPY]`
+  - `Tipo`: `[FONT 5.2rem]`
+  - `Cor`: `[GRADIENT HEX]`
+  - `UI`: `[RADIUS 6px]`
+  - `CSS`: `[GAP 24px]`
+  - `Ícones`: `[SVG MOUNT]`
+  - `Motion`: `[SPRING RIG]`
+  - `Teste`: `[CLICK TEST]`
+  - `QA`: `[AUDIT PASS]`

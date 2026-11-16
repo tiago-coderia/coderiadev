@@ -52,13 +52,13 @@
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
-  color: var(--agent-frontend);
+  color: var(--agent-texto);
   letter-spacing: -0.05em;
   opacity: 0.9;
 }
 
 .logo-accent {
-  color: var(--agent-frontend);
+  color: var(--agent-cor);
   font-weight: 600;
 }
 
