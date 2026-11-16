@@ -21,7 +21,7 @@ export class HeroAnimation {
     gsap.set(this.hero.eyebrow, { opacity: 0, y: 15 });
     gsap.set(this.hero.headline, { opacity: 0, y: 20 });
     gsap.set(this.hero.description, { opacity: 0, y: 15 });
-    gsap.set(this.hero.actions, { opacity: 0, y: 15 });
+    gsap.set([this.hero.primaryCta, this.hero.secondaryCta], { opacity: 0, y: 15, scale: 0.95 });
     gsap.set(this.hero.complementary, { opacity: 0, scale: 0.95 });
   }
 
@@ -80,7 +80,22 @@ export class HeroAnimation {
   revealCtas() {
     const gsap = window.gsap;
     if (!gsap) return;
-    gsap.to(this.hero.actions, { opacity: 1, y: 0, duration: 0.7, ease: 'back.out(1.4)' });
+    gsap.set(this.hero.actions, { opacity: 1 });
+    gsap.to([this.hero.primaryCta, this.hero.secondaryCta], { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'back.out(1.4)' });
+  }
+
+  revealPrimaryCta() {
+    const gsap = window.gsap;
+    if (!gsap) return;
+    gsap.set(this.hero.actions, { opacity: 1 });
+    gsap.to(this.hero.primaryCta, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.5)' });
+  }
+
+  revealSecondaryCta() {
+    const gsap = window.gsap;
+    if (!gsap) return;
+    gsap.set(this.hero.actions, { opacity: 1 });
+    gsap.to(this.hero.secondaryCta, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'back.out(1.5)' });
   }
 
   revealComplementary() {

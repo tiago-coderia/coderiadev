@@ -6,11 +6,13 @@
 import { AGENT_PROFILES } from '../config/agents.config.js';
 import { AgentCursor } from './agent-cursor.js';
 import { AgentMovement } from './agent-movement.js';
+import { AgentBoxDrawer } from './agent-box-drawer.js';
 
 export class AgentEngine {
   constructor() {
     this.container = document.getElementById('agents-layer');
     this.movement = new AgentMovement();
+    this.boxDrawer = new AgentBoxDrawer(this.container);
     this.agents = new Map();
     this.isMobile = window.innerWidth <= 768;
 
@@ -65,6 +67,7 @@ export class AgentEngine {
 
   destroy() {
     this.movement.stopAll();
+    if (this.boxDrawer) this.boxDrawer.clearAll();
     this.agents.forEach(agent => agent.destroy());
     this.agents.clear();
   }

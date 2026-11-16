@@ -87,14 +87,82 @@
   color: #10b981 !important;
 }
 
-/* Agent Active Laser / Guide Trace */
-.agent-trace {
+/* ==========================================================================
+   Wireframe Bounding Boxes (Figma / Swarm Multi-player Design Tool Aesthetic)
+   ========================================================================== */
+
+.wireframe-box {
   position: absolute;
   pointer-events: none;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  z-index: 92;
+  border-width: 1px;
+  border-style: dashed;
+  box-sizing: border-box;
+  will-change: width, height, transform, opacity;
+  transition: opacity 0.35s var(--ease-smooth);
+}
+
+.wireframe-box.is-complete {
   opacity: 0;
-  transition: opacity 0.3s;
+  transform: scale(1.01);
+  transition: opacity 0.4s var(--ease-smooth), transform 0.4s var(--ease-smooth);
+}
+
+/* 4 Corner Resize Handles */
+.wireframe-handle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #ffffff;
+  border-width: 1.5px;
+  border-style: solid;
+  border-radius: 1px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  z-index: 93;
+}
+
+.handle-tl { top: -3px; left: -3px; }
+.handle-tr { top: -3px; right: -3px; }
+.handle-bl { bottom: -3px; left: -3px; }
+.handle-br { bottom: -3px; right: -3px; }
+
+/* Dimension & Tag Callout Pill */
+.wireframe-tag {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 7px;
+  background-color: rgba(12, 12, 17, 0.95);
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: #ffffff;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 94;
+}
+
+.wireframe-box.is-top-boundary .wireframe-tag {
+  bottom: auto;
+  top: 6px;
+  left: 6px;
+}
+
+.wireframe-tag-name {
+  color: inherit;
+  font-weight: 600;
+}
+
+.wireframe-tag-dim {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 8.5px;
 }
 
 /* ==========================================================================

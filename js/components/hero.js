@@ -50,6 +50,59 @@ export class Hero {
     };
   }
 
+  /**
+   * Retrieves the exact bounding box of a target element in viewport coordinates
+   * @param {HTMLElement} element 
+   * @param {number} padding 
+   * @returns {{left: number, top: number, width: number, height: number, right: number, bottom: number}}
+   */
+  getElementBox(element, padding = 4) {
+    if (!element) {
+      return { left: 0, top: 0, width: 100, height: 40, right: 100, bottom: 40 };
+    }
+    const rect = element.getBoundingClientRect();
+    const left = Math.max(0, rect.left - padding);
+    const top = Math.max(0, rect.top - padding);
+    const width = Math.max(20, rect.width + padding * 2);
+    const height = Math.max(16, rect.height + padding * 2);
+    return {
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height
+    };
+  }
+
+  getTargetBoxes() {
+    return {
+      header: () => {
+        const header = document.querySelector('.site-header');
+        return this.getElementBox(header, 0);
+      },
+      headerLogo: () => {
+        const logo = document.querySelector('.brand-logo');
+        return this.getElementBox(logo, 6);
+      },
+      headerNav: () => {
+        const nav = document.querySelector('.nav-list');
+        return this.getElementBox(nav, 6);
+      },
+      headerCta: () => {
+        const btn = document.getElementById('header-cta-btn');
+        return this.getElementBox(btn, 4);
+      },
+      eyebrow: () => this.getElementBox(this.eyebrow, 4),
+      headline: () => this.getElementBox(this.headline, 8),
+      headlineHighlight: () => this.getElementBox(this.headlineHighlight, 4),
+      description: () => this.getElementBox(this.description, 6),
+      primaryCta: () => this.getElementBox(this.primaryCta, 4),
+      secondaryCta: () => this.getElementBox(this.secondaryCta, 4),
+      complementary: () => this.getElementBox(this.complementary, 4)
+    };
+  }
+
   getTargetPositions() {
     return {
       headerLogo: () => {

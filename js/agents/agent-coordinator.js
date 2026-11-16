@@ -1,6 +1,7 @@
 /**
  * Coderia.dev — Agent Swarm Choreography Coordinator
- * Drives the 6-phase construction sequence, synchronizing agent movements with UI DOM reveals
+ * Drives the 6-phase construction sequence with real-time wireframe bounding box drawing
+ * matching the signature Swarm Rebuild / multiplayer design tool aesthetic.
  */
 
 export class AgentCoordinator {
@@ -10,6 +11,7 @@ export class AgentCoordinator {
     this.heroAnimation = heroAnimation;
     this.tasks = taskEngine;
     this.movement = engine.movement;
+    this.boxDrawer = engine.boxDrawer;
     this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.isMobile = window.innerWidth <= 768;
   }
@@ -60,16 +62,17 @@ export class AgentCoordinator {
       );
     });
 
-    await this.delay(900);
+    await this.delay(850);
     this.tasks.completeTask('init-swarm', 'INIT');
-    await this.delay(300);
+    await this.delay(250);
   }
 
   /**
    * FASE 02 — STRUCTURE
-   * ARCHITECT frames structural bounds, LAYOUT draws header, FRONTEND anchors logo
+   * ARCHITECT draws blueprint guides, LAYOUT & FRONTEND draw bounding boxes for Header & Logo
    */
   async phase2_Structure() {
+    const boxes = this.hero.getTargetBoxes();
     const targets = this.hero.getTargetPositions();
     const architect = this.engine.getAgent('architect');
     const layout = this.engine.getAgent('layout');
@@ -78,180 +81,202 @@ export class AgentCoordinator {
     // Reveal blueprint lines
     this.heroAnimation.revealBlueprintLines();
 
-    // ARCHITECT frames blueprint
+    // ARCHITECT sweeps blueprint frame
     if (architect) {
       architect.setAction('FRAMING', 'is-selecting');
       const hPos = targets.blueprintLineH();
-      this.movement.moveTo(architect, hPos.x - 120, hPos.y + 20, { duration: 1.1 });
+      this.movement.moveTo(architect, hPos.x - 140, hPos.y + 15, { duration: 0.9 });
     }
 
-    await this.delay(400);
+    await this.delay(350);
 
-    // LAYOUT establishes header border and navigation
+    // LAYOUT draws the entire Header bounding box in real time
     if (layout) {
-      layout.setAction('ALIGNING', 'is-selecting');
-      const navPos = targets.headerNav();
-      this.movement.moveTo(layout, navPos.x, navPos.y, { 
-        duration: 1.2,
-        onComplete: () => {
+      const headerBox = boxes.header();
+      await this.boxDrawer.drawBox({
+        agent: layout,
+        box: headerBox,
+        tagName: '<header.site-header>',
+        duration: 0.9,
+        onMaterialize: () => {
           this.heroAnimation.revealNav();
-          layout.setAction('STANDBY');
           this.tasks.completeTask('struct-header', 'STRUCT');
         }
       });
+      layout.setAction('STANDBY');
+    } else {
+      this.heroAnimation.revealNav();
+      this.tasks.completeTask('struct-header', 'STRUCT');
     }
 
-    // FRONTEND anchors typographic logo
+    await this.delay(200);
+
+    // FRONTEND draws the typographic Logo bounding box
     if (frontend) {
-      frontend.setAction('ANCHORING', 'is-typing');
-      const logoPos = targets.headerLogo();
-      this.movement.moveTo(frontend, logoPos.x + 30, logoPos.y + 10, {
-        duration: 1.0,
-        onComplete: () => {
+      const logoBox = boxes.headerLogo();
+      await this.boxDrawer.drawBox({
+        agent: frontend,
+        box: logoBox,
+        tagName: '<a.brand-logo>',
+        duration: 0.75,
+        onMaterialize: () => {
           this.heroAnimation.revealLogo();
-          frontend.setAction('STANDBY');
           this.tasks.completeTask('struct-logo', 'STRUCT');
         }
       });
+      frontend.setAction('STANDBY');
+    } else {
+      this.heroAnimation.revealLogo();
+      this.tasks.completeTask('struct-logo', 'STRUCT');
     }
 
     this.tasks.completeTask('struct-frame', 'STRUCT');
-    await this.delay(1100);
+    await this.delay(400);
   }
 
   /**
    * FASE 03 — TYPOGRAPHY
-   * TYPOGRAPHY sweeps eyebrow and headline; DESIGNER polishes visual highlight
+   * TYPOGRAPHY draws bounding boxes for Eyebrow & Headline; DESIGNER frames the highlight
    */
   async phase3_Typography() {
-    const targets = this.hero.getTargetPositions();
+    const boxes = this.hero.getTargetBoxes();
     const typography = this.engine.getAgent('typography');
     const designer = this.engine.getAgent('designer');
 
-    // TYPOGRAPHY constructs eyebrow
+    // 1. TYPOGRAPHY draws Eyebrow bounding box
     if (typography) {
-      typography.setAction('WRITING', 'is-typing');
-      const eyebrowPos = targets.eyebrow();
-      
-      await new Promise(res => {
-        this.movement.moveTo(typography, eyebrowPos.x + 80, eyebrowPos.y, {
-          duration: 0.9,
-          onComplete: () => {
-            this.heroAnimation.revealEyebrow();
-            this.tasks.completeTask('type-eyebrow', 'TYPE');
-            res();
-          }
-        });
+      const eyebrowBox = boxes.eyebrow();
+      await this.boxDrawer.drawBox({
+        agent: typography,
+        box: eyebrowBox,
+        tagName: '<div.hero-eyebrow>',
+        duration: 0.8,
+        onMaterialize: () => {
+          this.heroAnimation.revealEyebrow();
+          this.tasks.completeTask('type-eyebrow', 'TYPE');
+        }
       });
 
       await this.delay(200);
 
-      // TYPOGRAPHY constructs headline
-      const headlinePos = targets.headlineStart();
-      this.movement.moveTo(typography, headlinePos.x + 120, headlinePos.y + 15, {
-        duration: 1.0,
-        onComplete: () => {
+      // 2. TYPOGRAPHY draws the massive Headline bounding box across the central viewport
+      const headlineBox = boxes.headline();
+      await this.boxDrawer.drawBox({
+        agent: typography,
+        box: headlineBox,
+        tagName: '<h1.hero-headline>',
+        duration: 1.15,
+        onMaterialize: () => {
           this.heroAnimation.revealHeadline();
           this.tasks.completeTask('type-headline', 'TYPE');
         }
       });
+      typography.setAction('STANDBY');
     } else {
-      // Fallback for mobile if typography culled
       this.heroAnimation.revealEyebrow();
       this.heroAnimation.revealHeadline();
       this.tasks.completeTask('type-eyebrow', 'TYPE');
       this.tasks.completeTask('type-headline', 'TYPE');
     }
 
-    await this.delay(500);
+    await this.delay(300);
 
-    // DESIGNER polishes the highlighted phrase "digital experiences"
+    // 3. DESIGNER draws bounding box specifically for "digital experiences" highlight
     if (designer) {
-      designer.setAction('HIGHLIGHTING', 'is-selecting');
-      const highlightPos = targets.headlineHighlight();
-      
-      this.movement.moveTo(designer, highlightPos.x, highlightPos.y - 15, {
-        duration: 0.9,
-        onComplete: () => {
+      const highlightBox = boxes.headlineHighlight();
+      await this.boxDrawer.drawBox({
+        agent: designer,
+        box: highlightBox,
+        tagName: '<span.highlight>',
+        duration: 0.75,
+        onMaterialize: () => {
           this.heroAnimation.glowHeadlineHighlight();
-          designer.setAction('POLISHED');
           this.tasks.completeTask('design-highlight', 'TYPE');
         }
       });
+      designer.setAction('POLISHED');
     } else {
       this.heroAnimation.glowHeadlineHighlight();
       this.tasks.completeTask('design-highlight', 'TYPE');
     }
 
-    await this.delay(1000);
+    await this.delay(400);
   }
 
   /**
    * FASE 04 — VISUAL ENGINEERING
-   * FRONTEND renders description; MOTION executes CTA micro-animations
+   * FRONTEND draws description box; MOTION draws primary & secondary CTA button boxes
    */
   async phase4_VisualEngineering() {
-    const targets = this.hero.getTargetPositions();
+    const boxes = this.hero.getTargetBoxes();
     const frontend = this.engine.getAgent('frontend');
     const motion = this.engine.getAgent('motion');
 
-    // FRONTEND renders supporting paragraph
+    // 1. FRONTEND draws supporting paragraph bounding box
     if (frontend) {
-      frontend.setAction('SYNTHESIZING', 'is-typing');
-      const descPos = targets.description();
-      this.movement.moveTo(frontend, descPos.x + 60, descPos.y, {
-        duration: 0.9,
-        onComplete: () => {
+      const descBox = boxes.description();
+      await this.boxDrawer.drawBox({
+        agent: frontend,
+        box: descBox,
+        tagName: '<p.hero-description>',
+        duration: 0.85,
+        onMaterialize: () => {
           this.heroAnimation.revealDescription();
           this.tasks.completeTask('visual-desc', 'VISUAL');
         }
       });
+      frontend.setAction('STANDBY');
     } else {
       this.heroAnimation.revealDescription();
       this.tasks.completeTask('visual-desc', 'VISUAL');
     }
 
-    await this.delay(350);
+    await this.delay(250);
 
-    // MOTION tests primary & secondary CTAs
+    // 2. MOTION draws Primary CTA button box
     if (motion) {
-      motion.setAction('RIGGING CTA', 'is-selecting');
-      const cta1Pos = targets.primaryCta();
-
-      await new Promise(res => {
-        this.movement.moveTo(motion, cta1Pos.x + 20, cta1Pos.y + 10, {
-          duration: 0.9,
-          onComplete: () => {
-            this.heroAnimation.revealCtas();
-            this.tasks.completeTask('motion-cta-1', 'VISUAL');
-            res();
-          }
-        });
-      });
-
-      // Quick test on secondary CTA
-      const cta2Pos = targets.secondaryCta();
-      this.movement.moveTo(motion, cta2Pos.x + 10, cta2Pos.y + 10, {
-        duration: 0.6,
-        onComplete: () => {
-          this.tasks.completeTask('motion-cta-2', 'VISUAL');
-          motion.setAction('CALIBRATED');
+      const cta1Box = boxes.primaryCta();
+      await this.boxDrawer.drawBox({
+        agent: motion,
+        box: cta1Box,
+        tagName: '<button.primary-cta>',
+        duration: 0.7,
+        onMaterialize: () => {
+          this.heroAnimation.revealPrimaryCta();
+          this.tasks.completeTask('motion-cta-1', 'VISUAL');
         }
       });
+
+      await this.delay(150);
+
+      // 3. MOTION draws Secondary CTA button box
+      const cta2Box = boxes.secondaryCta();
+      await this.boxDrawer.drawBox({
+        agent: motion,
+        box: cta2Box,
+        tagName: '<button.secondary-cta>',
+        duration: 0.65,
+        onMaterialize: () => {
+          this.heroAnimation.revealSecondaryCta();
+          this.tasks.completeTask('motion-cta-2', 'VISUAL');
+        }
+      });
+      motion.setAction('CALIBRATED');
     } else {
       this.heroAnimation.revealCtas();
       this.tasks.completeTask('motion-cta-1', 'VISUAL');
       this.tasks.completeTask('motion-cta-2', 'VISUAL');
     }
 
-    await this.delay(900);
+    await this.delay(500);
   }
 
   /**
    * FASE 05 — QUALITY ASSURANCE
-   * QA traverses components and verifies visual geometry
+   * QA traverses layout, validates components, and draws the specification badge box
    */
   async phase5_QualityAssurance() {
+    const boxes = this.hero.getTargetBoxes();
     const targets = this.hero.getTargetPositions();
     const qa = this.engine.getAgent('qa');
 
@@ -260,8 +285,8 @@ export class AgentCoordinator {
       const navPos = targets.headerNav();
 
       await new Promise(res => {
-        this.movement.moveTo(qa, navPos.x + 40, navPos.y + 10, {
-          duration: 0.8,
+        this.movement.moveTo(qa, navPos.x + 30, navPos.y + 10, {
+          duration: 0.75,
           onComplete: () => {
             this.tasks.completeTask('qa-nav', 'QA CHECK');
             res();
@@ -275,8 +300,8 @@ export class AgentCoordinator {
       const heroPos = targets.headlineHighlight();
 
       await new Promise(res => {
-        this.movement.moveTo(qa, heroPos.x + 60, heroPos.y + 20, {
-          duration: 0.7,
+        this.movement.moveTo(qa, heroPos.x + 50, heroPos.y + 15, {
+          duration: 0.65,
           onComplete: () => {
             this.tasks.completeTask('qa-hero', 'QA CHECK');
             res();
@@ -286,20 +311,18 @@ export class AgentCoordinator {
 
       await this.delay(200);
 
-      // Verify complementary specification badge
-      qa.setAction('CERTIFYING', 'is-validating');
-      const specPos = targets.complementary();
-
-      await new Promise(res => {
-        this.movement.moveTo(qa, specPos.x + 40, specPos.y + 10, {
-          duration: 0.7,
-          onComplete: () => {
-            this.heroAnimation.revealComplementary();
-            this.tasks.completeTask('qa-badge', 'QA CHECK');
-            qa.setAction('VERIFIED', 'is-validating');
-            res();
-          }
-        });
+      // QA draws the Complementary Specification Badge box
+      const specBox = boxes.complementary();
+      await this.boxDrawer.drawBox({
+        agent: qa,
+        box: specBox,
+        tagName: '<div.spec-badge>',
+        duration: 0.7,
+        onMaterialize: () => {
+          this.heroAnimation.revealComplementary();
+          this.tasks.completeTask('qa-badge', 'QA CHECK');
+          qa.setAction('CERTIFIED', 'is-validating');
+        }
       });
     } else {
       this.heroAnimation.revealComplementary();
@@ -308,7 +331,7 @@ export class AgentCoordinator {
       this.tasks.completeTask('qa-badge', 'QA CHECK');
     }
 
-    await this.delay(600);
+    await this.delay(400);
   }
 
   /**
@@ -320,14 +343,13 @@ export class AgentCoordinator {
 
     const activeAgents = this.engine.getActiveAgents();
     
-    // Group agents slightly or let them transition to subtle ambient idle drift
+    // Disperse agents into comfortable ambient idle drift around viewport
     activeAgents.forEach((agent, i) => {
       agent.setAction('IDLE');
       
-      // Gentle dispersion around comfortable viewport coordinates
       const angle = (i / activeAgents.length) * Math.PI * 2;
-      const targetX = window.innerWidth * 0.5 + Math.cos(angle) * (window.innerWidth * 0.38);
-      const targetY = window.innerHeight * 0.45 + Math.sin(angle) * (window.innerHeight * 0.28);
+      const targetX = window.innerWidth * 0.5 + Math.cos(angle) * (window.innerWidth * 0.36);
+      const targetY = window.innerHeight * 0.44 + Math.sin(angle) * (window.innerHeight * 0.26);
 
       this.movement.moveTo(agent, targetX, targetY, {
         duration: 1.4,

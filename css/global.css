@@ -60,6 +60,18 @@ body {
   top: 20px;
 }
 
+/* Initial Build States (prevents flash of content before agents draw frames) */
+body.is-loading .brand-logo,
+body.is-loading .nav-item,
+body.is-loading #header-cta-btn,
+body.is-loading .hero-eyebrow,
+body.is-loading .hero-headline,
+body.is-loading .hero-description,
+body.is-loading .hero-actions .btn,
+body.is-loading .hero-complementary {
+  opacity: 0;
+}
+
 /* Base Buttons */
 .btn {
   display: inline-flex;

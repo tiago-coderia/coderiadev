@@ -24,14 +24,14 @@ class App {
     }
 
     try {
-      // 1. Kick off intro visual boot
-      IntroAnimation.start();
-
-      // 2. Initialize UI components
+      // 1. Initialize UI components & set initial hidden states
       const navigation = new Navigation();
       const hero = new Hero();
       const heroAnimation = new HeroAnimation(hero);
       const transitions = new Transitions();
+
+      // 2. Kick off intro visual boot
+      IntroAnimation.start();
 
       // 3. Initialize Agent Engine & Tasks HUD
       const taskEngine = new AgentTasks();
