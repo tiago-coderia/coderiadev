@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CODERIA.DEV — Digital experiences engineered with intelligence</title>
+  <meta name="description" content="Independent digital engineering studio transforming complex challenges into intelligent digital solutions through engineering, automation and artificial intelligence.">
+  
+  <!-- Preconnect & Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheets in Modular Order -->
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/agents.css">
+
+  <!-- GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- Motion One (ES module or global fallback) -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@10.16.2/dist/motion.js"></script>
+</head>
+<body class="is-loading">
+  <!-- Engineering Background Grid & Ambient Glow -->
+  <div class="bg-grid-pattern" aria-hidden="true"></div>
+  <div class="bg-radial-gradient" aria-hidden="true"></div>
+
+  <!-- Agent Swarm Visualization Layer (Non-blocking) -->
+  <div id="agents-layer" class="agents-layer" aria-hidden="true">
+    <!-- Agent cursors will be mounted dynamically by agent-engine.js -->
+  </div>
+
+  <!-- Skip Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header Section -->
+  <header class="site-header" id="site-header">
+    <div class="header-container">
+      <a href="#" class="brand-logo" aria-label="Coderia.dev home">
+        <span class="logo-symbol">&lt;/&gt;</span>
+        <span class="logo-text">CODERIA<span class="logo-accent">.DEV</span></span>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav class="site-nav" aria-label="Main Navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="#home" class="nav-link active">Home</a></li>
+          <li class="nav-item"><a href="#expertise" class="nav-link">Expertise</a></li>
+          <li class="nav-item"><a href="#projects" class="nav-link">Projects</a></li>
+          <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+          <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- Header CTA & Mobile Hamburger -->
+      <div class="header-actions">
+        <a href="#contact" class="btn btn-header-cta" id="header-cta-btn">
+          <span class="btn-text">Let's Talk</span>
+          <span class="btn-indicator" aria-hidden="true"></span>
+        </a>
+
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-nav" aria-label="Toggle navigation menu">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Navigation -->
+    <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+      <div class="mobile-nav-inner">
+        <ul class="mobile-nav-list">
+          <li><a href="#home" class="mobile-nav-link active">Home</a></li>
+          <li><a href="#expertise" class="mobile-nav-link">Expertise</a></li>
+          <li><a href="#projects" class="mobile-nav-link">Projects</a></li>
+          <li><a href="#about" class="mobile-nav-link">About</a></li>
+          <li><a href="#contact" class="mobile-nav-link">Contact</a></li>
+        </ul>
+        <div class="mobile-nav-footer">
+          <a href="#contact" class="btn btn-primary btn-block">Let's Talk</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Hero Section -->
+  <main id="main-content">
+    <section class="hero-section" id="hero">
+      <div class="hero-container">
+        
+        <!-- Eyebrow Badge -->
+        <div class="hero-eyebrow-wrapper">
+          <div class="hero-eyebrow" id="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span class="eyebrow-text">INDEPENDENT DIGITAL ENGINEERING STUDIO</span>
+          </div>
+        </div>
+
+        <!-- Impactful Headline -->
+        <h1 class="hero-headline" id="hero-headline">
+          <span class="headline-line line-1">Engineering ideas into</span>
+          <span class="headline-line line-2">
+            <span class="headline-highlight" id="headline-highlight">digital experiences.</span>
+          </span>
+        </h1>
+
+        <!-- Supporting Text -->
+        <p class="hero-description" id="hero-description">
+          Transforming complex challenges into intelligent digital solutions through engineering, automation and artificial intelligence.
+        </p>
+
+        <!-- Call To Actions -->
+        <div class="hero-actions" id="hero-actions">
+          <a href="#projects" class="btn btn-primary" id="hero-primary-cta">
+            <span class="btn-text">Explore our work</span>
+            <svg class="btn-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3.33337 8H12.6667M12.6667 8L8.66671 4M12.6667 8L8.66671 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+
+          <a href="#contact" class="btn btn-secondary" id="hero-secondary-cta">
+            <span class="btn-text">Let's talk</span>
+          </a>
+        </div>
+
+        <!-- Complementary Indicator Badge -->
+        <div class="hero-complementary" id="hero-complementary">
+          <div class="engineering-spec-badge">
+            <span class="spec-segment">DESIGNING</span>
+            <span class="spec-separator" aria-hidden="true">•</span>
+            <span class="spec-segment">ENGINEERING</span>
+            <span class="spec-separator" aria-hidden="true">•</span>
+            <span class="spec-segment">BUILDING</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Hero Visual Guides / Structural Blueprint Lines -->
+      <div class="hero-blueprint-lines" aria-hidden="true">
+        <span class="blueprint-line line-h" id="blueprint-line-h"></span>
+        <span class="blueprint-line line-v" id="blueprint-line-v"></span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Construction HUD Indicator (Dev-tool aesthetic) -->
+  <aside class="construction-hud" id="construction-hud" aria-live="polite">
+    <div class="hud-header">
+      <div class="hud-status-led" id="hud-status-led"></div>
+      <span class="hud-title" id="hud-title">BUILDING INTERFACE</span>
+      <span class="hud-percent" id="hud-percent">0%</span>
+    </div>
+    
+    <div class="hud-progress-track">
+      <div class="hud-progress-bar" id="hud-progress-bar" style="width: 0%;"></div>
+    </div>
+    
+    <div class="hud-footer">
+      <span class="hud-counter" id="hud-agents-count">7 AGENTS ACTIVE</span>
+      <span class="hud-phase-label" id="hud-phase-label">INIT</span>
+    </div>
+  </aside>
+
+  <!-- Main ES Module Entry Point -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

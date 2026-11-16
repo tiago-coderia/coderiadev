@@ -1,0 +1,219 @@
+/* ==========================================================================
+   Coderia.dev — Hero Section Styles
+   ========================================================================== */
+
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--header-height) + var(--space-3xl)) var(--space-xl) var(--space-4xl);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.hero-container {
+  max-width: var(--container-max-width);
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 12;
+}
+
+/* Eyebrow Badge */
+.hero-eyebrow-wrapper {
+  margin-bottom: var(--space-lg);
+  display: inline-flex;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 14px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--agent-architect);
+  box-shadow: 0 0 8px var(--agent-architect);
+}
+
+/* Headline */
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6.5vw, 5.25rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--text-highlight);
+  max-width: 980px;
+  margin-bottom: var(--space-xl);
+}
+
+.headline-line {
+  display: block;
+}
+
+.headline-highlight {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 70%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.15);
+}
+
+.headline-highlight::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.8), transparent);
+  opacity: 0.7;
+}
+
+/* Supporting Description */
+.hero-description {
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 1.35vw, 1.2rem);
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  max-width: 680px;
+  margin-bottom: var(--space-2xl);
+  letter-spacing: -0.01em;
+}
+
+/* Actions CTAs */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-3xl);
+  flex-wrap: wrap;
+}
+
+.hero-actions .btn {
+  padding: 14px 28px;
+  font-size: 14.5px;
+}
+
+/* Complementary Badge */
+.hero-complementary {
+  display: inline-flex;
+}
+
+.engineering-spec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.spec-segment {
+  transition: color var(--duration-fast);
+}
+
+.spec-segment:hover {
+  color: var(--text-primary);
+}
+
+.spec-separator {
+  color: var(--border-active);
+  font-size: 8px;
+}
+
+/* Structural Blueprint Lines */
+.hero-blueprint-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.blueprint-line {
+  position: absolute;
+  background-color: var(--border-subtle);
+  opacity: 0.5;
+}
+
+.line-h {
+  top: var(--header-height);
+  left: 5%;
+  right: 5%;
+  height: 1px;
+}
+
+.line-v {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--border-subtle) 30%, var(--border-subtle) 70%, transparent);
+  opacity: 0.25;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: calc(var(--header-height) + var(--space-xl)) var(--space-md) var(--space-3xl);
+  }
+
+  .hero-headline {
+    font-size: 2.35rem;
+    line-height: 1.15;
+  }
+
+  .hero-description {
+    font-size: 0.95rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .line-h, .line-v {
+    display: none;
+  }
+}
