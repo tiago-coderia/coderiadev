@@ -1,14 +1,100 @@
 /**
- * Coderia.dev — Section Elements Reveal & Word-by-Word Typing Animations
+ * Coderia.dev — Section Elements Reveal & Word-by-Word / Letter-by-Letter Typing Animations
  * Guarantees content ONLY appears AFTER the wireframe box or clone is drawn.
- * Implements realistic word-by-word typing for text elements,
- * card image and icon mounting, and preserves gradient text clipping.
+ * Implements realistic letter-by-letter writing effect for the main headline,
+ * word-by-word typing for text elements, and card image/icon mounting.
  */
 
 export class HeroAnimation {
   constructor(heroInstance) {
     this.hero = heroInstance;
     this.initElementStates();
+  }
+
+  /**
+   * Prepares the main headline by wrapping individual characters into spans
+   * Enables authentic character-by-character typewriter writing effect
+   */
+  prepareHeadlineForTyping(element) {
+    if (!element) return [];
+
+    const existingChars = element.querySelectorAll('.type-char');
+    if (existingChars.length > 0) {
+      existingChars.forEach(c => {
+        c.style.opacity = '0';
+        c.style.display = 'inline';
+      });
+      return Array.from(existingChars);
+    }
+
+    function wrapChars(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        if (!text) return null;
+
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          if (ch === '\n' || ch === '\r') continue;
+
+          const span = document.createElement('span');
+          span.className = 'type-char';
+          span.style.opacity = '0';
+          span.style.display = 'inline';
+          span.style.willChange = 'opacity';
+          span.textContent = ch;
+          frag.appendChild(span);
+        }
+        return frag;
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const children = Array.from(node.childNodes);
+        children.forEach(child => {
+          const replacement = wrapChars(child);
+          if (replacement) {
+            node.replaceChild(replacement, child);
+          }
+        });
+        return null;
+      }
+      return null;
+    }
+
+    wrapChars(element);
+    return Array.from(element.querySelectorAll('.type-char'));
+  }
+
+  /**
+   * Writes out the headline letter-by-letter with live cursor tracking
+   */
+  async typeHeadlineCharacters(element, agent = null, options = {}) {
+    if (!element) return;
+    const chars = this.prepareHeadlineForTyping(element);
+    const charDelay = options.charDelay || 36; // 36ms per letter (~1.4s total)
+
+    element.style.opacity = '1';
+    element.style.visibility = 'visible';
+
+    if (agent) {
+      agent.setAction('WRITING...', 'is-typing');
+    }
+
+    for (let i = 0; i < chars.length; i++) {
+      const charSpan = chars[i];
+      charSpan.style.opacity = '1';
+
+      if (agent && i % 2 === 0) {
+        const rect = charSpan.getBoundingClientRect();
+        const scrollX = window.scrollX || window.pageXOffset || 0;
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        agent.setPosition(rect.right + scrollX + 3, rect.top + scrollY + 4);
+      }
+
+      await new Promise(r => setTimeout(r, charDelay));
+    }
+
+    if (agent) {
+      agent.setAction('WRITTEN', 'is-selecting');
+    }
   }
 
   /**
@@ -93,7 +179,6 @@ export class HeroAnimation {
 
       if (gsap) {
         if (isHighlight) {
-          // Never apply transform to text-clip gradient words to protect Blink text rendering
           gsap.fromTo(wordSpan,
             { opacity: 0 },
             { opacity: 1, duration: 0.12, ease: 'power1.out' }
@@ -108,7 +193,6 @@ export class HeroAnimation {
         wordSpan.style.opacity = '1';
       }
 
-      // Cursor dynamically follows the typing position
       if (agent && i % 2 === 0) {
         const rect = wordSpan.getBoundingClientRect();
         const scrollX = window.scrollX || window.pageXOffset || 0;
@@ -143,9 +227,9 @@ export class HeroAnimation {
     gsap.set('#hero-primary-cta', { opacity: 0, y: 15, scale: 0.95 });
     gsap.set('#hero-showcase-frame', { opacity: 0, y: 30, scale: 0.96 });
 
-    // Prepare Hero text words
+    // Prepare Hero headline characters and description words
     const headline = document.getElementById('hero-headline');
-    if (headline) this.prepareTextForTyping(headline);
+    if (headline) this.prepareHeadlineForTyping(headline);
     const desc = document.getElementById('hero-description');
     if (desc) this.prepareTextForTyping(desc);
 
@@ -312,7 +396,7 @@ export class HeroAnimation {
     ];
     if (gsap) {
       gsap.set(selectors.join(','), { opacity: 1, y: 0, scale: 1, clearProps: 'transform' });
-      document.querySelectorAll('.type-word').forEach(w => w.style.opacity = '1');
+      document.querySelectorAll('.type-word, .type-char').forEach(w => w.style.opacity = '1');
     }
   }
 }

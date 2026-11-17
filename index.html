@@ -1,316 +1,458 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CODERIA.DEV — Construindo Aplicações Web Inteligentes</title>
-  <meta name="description" content="Desenvolvedor FullStack e de IA especializado em automações N8N, Next.js e Node.js para criar aplicações inteligentes, escaláveis e eficientes.">
-  
-  <!-- Preconnect & Typography Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/global.css">
-  <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/hero.css">
-  <link rel="stylesheet" href="css/sections.css">
-  <link rel="stylesheet" href="css/agents.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CODERIA.DEV — Construindo Aplicações Web Inteligentes</title>
+    <meta
+      name="description"
+      content="Desenvolvedor FullStack e de IA especializado em automações N8N, Next.js e Node.js para criar aplicações inteligentes, escaláveis e eficientes."
+    />
 
-  <!-- GSAP CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <!-- Motion One CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/motion@10.16.2/dist/motion.js"></script>
-</head>
-<body class="is-loading">
-  <!-- Engineering Background Grid & Ambient Glow -->
-  <div class="bg-grid-pattern" aria-hidden="true"></div>
-  <div class="bg-radial-gradient" aria-hidden="true"></div>
+    <!-- Preconnect & Typography Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Agent Swarm Multiplayer Layer -->
-  <div id="agents-layer" class="agents-layer" aria-hidden="true"></div>
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/header.css" />
+    <link rel="stylesheet" href="css/hero.css" />
+    <link rel="stylesheet" href="css/sections.css" />
+    <link rel="stylesheet" href="css/agents.css" />
 
-  <!-- Header Section (Sticky) -->
-  <header class="site-header" id="site-header">
-    <div class="header-container">
-      <a href="#" class="brand-logo" aria-label="Coderia.dev">
-        <img src="assets/images/logocompleta.svg" alt="Coderia Logo" class="brand-logo-img" height="34">
-      </a>
+    <!-- GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- Motion One CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/motion@10.16.2/dist/motion.js"></script>
+  </head>
+  <body class="is-loading">
+    <!-- Engineering Background Grid & Ambient Glow -->
+    <div class="bg-grid-pattern" aria-hidden="true"></div>
+    <div class="bg-radial-gradient" aria-hidden="true"></div>
 
-      <!-- Desktop Navigation -->
-      <nav class="site-nav" aria-label="Main Navigation">
-        <ul class="nav-list">
-          <li class="nav-item"><a href="#potencialize" class="nav-link">Porque IA?</a></li>
-          <li class="nav-item"><a href="#servicos" class="nav-link">Serviços</a></li>
-        </ul>
-      </nav>
+    <!-- Agent Swarm Multiplayer Layer -->
+    <div id="agents-layer" class="agents-layer" aria-hidden="true"></div>
 
-      <!-- Header CTA & Mobile Hamburger -->
-      <div class="header-actions">
-        <div class="cta-tooltip-wrapper">
-          <span class="email-tooltip">Clique para Copiar o Email</span>
-          <button class="btn btn-header-cta" id="header-contact-btn" data-email="hello@coderia.dev">
-            <span class="btn-text">Entre em contato</span>
-            <span class="btn-indicator" aria-hidden="true"></span>
+    <!-- Header Section (Sticky) -->
+    <header class="site-header" id="site-header">
+      <div class="header-container">
+        <a href="#" class="brand-logo" aria-label="Coderia.dev">
+          <img
+            src="assets/images/logocompleta.svg"
+            alt="Coderia Logo"
+            class="brand-logo-img"
+            height="34"
+          />
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="site-nav" aria-label="Main Navigation">
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="#potencialize" class="nav-link">Porque IA?</a>
+            </li>
+            <li class="nav-item">
+              <a href="#servicos" class="nav-link">Serviços</a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Header CTA & Mobile Hamburger -->
+        <div class="header-actions">
+          <div class="cta-tooltip-wrapper">
+            <span class="email-tooltip">Clique para Copiar o Email</span>
+            <button
+              class="btn btn-header-cta"
+              id="header-contact-btn"
+              data-email="hello@coderia.dev"
+            >
+              <span class="btn-text">Entre em contato</span>
+              <span class="btn-indicator" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <button
+            class="mobile-menu-toggle"
+            id="mobile-menu-toggle"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Toggle navigation menu"
+          >
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
           </button>
         </div>
-
-        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-nav" aria-label="Toggle navigation menu">
-          <span class="hamburger-bar"></span>
-          <span class="hamburger-bar"></span>
-          <span class="hamburger-bar"></span>
-        </button>
       </div>
-    </div>
 
-    <!-- Mobile Drawer Navigation -->
-    <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
-      <div class="mobile-nav-inner">
-        <ul class="mobile-nav-list">
-          <li><a href="#potencialize" class="mobile-nav-link">Porque IA?</a></li>
-          <li><a href="#servicos" class="mobile-nav-link">Serviços</a></li>
-          <li><a href="#contato" class="mobile-nav-link">Contato</a></li>
-        </ul>
-        <div class="mobile-nav-footer">
-          <button class="btn btn-primary btn-block mobile-contact-btn" data-email="hello@coderia.dev">Entre em contato</button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content Sections -->
-  <main id="main-content">
-    
-    <!-- SECTION 1: HERO -->
-    <section class="hero-section" id="hero" data-section-name="HERO">
-      <div class="hero-container">
-        
-        <!-- Brand Symbol -->
-        <div class="hero-brand-symbol-wrapper" id="hero-symbol-wrapper">
-          <img src="assets/images/logocoderia-v.svg" alt="Coderia Symbol" class="hero-brand-symbol" id="hero-symbol">
-        </div>
-
-        <!-- Headline -->
-        <h1 class="hero-headline" id="hero-headline">
-          Construindo Aplicações <br>
-          <span class="headline-highlight" id="headline-highlight">Web Inteligentes</span>
-        </h1>
-
-        <!-- Supporting Text -->
-        <p class="hero-description" id="hero-description">
-          Desenvolvedor FullStack e de IA especializado em automações N8N, Next.js e Node.js para criar aplicações inteligentes, escaláveis e eficientes.
-        </p>
-
-        <!-- CTA Actions -->
-        <div class="hero-actions" id="hero-actions">
-          <div class="cta-tooltip-wrapper">
-            <span class="email-tooltip">Em construção!</span>
-            <button class="btn btn-secondary" id="hero-primary-cta">
-              <span class="btn-text">Ver meus projetos</span>
+      <!-- Mobile Drawer Navigation -->
+      <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+        <div class="mobile-nav-inner">
+          <ul class="mobile-nav-list">
+            <li>
+              <a href="#potencialize" class="mobile-nav-link">Porque IA?</a>
+            </li>
+            <li><a href="#servicos" class="mobile-nav-link">Serviços</a></li>
+            <li><a href="#contato" class="mobile-nav-link">Contato</a></li>
+          </ul>
+          <div class="mobile-nav-footer">
+            <button
+              class="btn btn-primary btn-block mobile-contact-btn"
+              data-email="hello@coderia.dev"
+            >
+              Entre em contato
             </button>
           </div>
         </div>
-
-        <!-- Showcase Workspace Preview Frame -->
-        <div class="hero-showcase-frame" id="hero-showcase-frame">
-          <img src="assets/images/wallpaper2.png" alt="n8n Work Example Showcase" loading="eager">
-        </div>
-
       </div>
-    </section>
+    </header>
 
-    <!-- SECTION 2: WORKFLOW (#potencialize) -->
-    <section class="page-section" id="potencialize" data-section-name="WORKFLOW">
-      <div class="section-container">
-        <div class="section-header" id="workflow-header">
-          <h2 class="section-title" id="workflow-title">Potencialize seu fluxo de trabalho com IA.</h2>
-          <p class="section-subtitle" id="workflow-subtitle">
-            Demonstrando minha capacidade de integrar IA, construir automações complexas e entregar soluções robustas de pilha completa.
-          </p>
-        </div>
-
-        <!-- 4 Project Cards Grid -->
-        <div class="cards-grid-2x2" id="workflow-cards">
-          
-          <article class="card-tec" id="card-tec-1">
-            <div class="card-tec-image-wrapper">
-              <img src="assets/images/card1.jpg" alt="Automação de fluxo de trabalho orientada por IA" class="card-tec-img" id="card-tec-img-1">
-            </div>
-            <div class="card-tec-body">
-              <h3 class="card-tec-title" id="card-tec-title-1">Automação de fluxo de trabalho orientada por IA</h3>
-              <p class="card-tec-desc" id="card-tec-desc-1">
-                Sistema abrangente de automação de fluxo de trabalho usando N8N, integrando serviços de IA para otimizar processos de negócios e aumentar a produtividade.
-              </p>
-            </div>
-          </article>
-
-          <article class="card-tec" id="card-tec-2">
-            <div class="card-tec-image-wrapper">
-              <img src="assets/images/card2.jpg" alt="Sincronização automatizada de CRM N8N" class="card-tec-img" id="card-tec-img-2">
-            </div>
-            <div class="card-tec-body">
-              <h3 class="card-tec-title" id="card-tec-title-2">Sincronização automatizada de CRM N8N</h3>
-              <p class="card-tec-desc" id="card-tec-desc-2">
-                Automação de fluxos de trabalho complexos, sincronizando dados em tempo real entre Salesforce, Hubspot e bancos de dados internos.
-              </p>
-            </div>
-          </article>
-
-          <article class="card-tec" id="card-tec-3">
-            <div class="card-tec-image-wrapper">
-              <img src="assets/images/card3.jpg" alt="Painel de análise de dados em tempo real" class="card-tec-img" id="card-tec-img-3">
-            </div>
-            <div class="card-tec-body">
-              <h3 class="card-tec-title" id="card-tec-title-3">Painel de análise de dados em tempo real</h3>
-              <p class="card-tec-desc" id="card-tec-desc-3">
-                Aplicação full-stack que utiliza Next.js, Node.js e WebSockets para visualizar métricas de negócios em tempo real.
-              </p>
-            </div>
-          </article>
-
-          <article class="card-tec" id="card-tec-4">
-            <div class="card-tec-image-wrapper">
-              <img src="assets/images/card4.jpg" alt="E-commerce com busca por IA e Chatbot" class="card-tec-img" id="card-tec-img-4">
-            </div>
-            <div class="card-tec-body">
-              <h3 class="card-tec-title" id="card-tec-title-4">E-commerce com busca por IA e Chatbot</h3>
-              <p class="card-tec-desc" id="card-tec-desc-4">
-                E-commerce de alto desempenho com um recurso de busca semântica baseado em IA para uma descoberta de produtos superior.
-              </p>
-            </div>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 3: SERVICES (#servicos) -->
-    <div class="services-wrapper" id="servicos" data-section-name="SERVICES">
-      <section class="page-section">
-        <div class="section-container">
-          <div class="section-header" id="services-header">
-            <h2 class="section-title" id="services-title">Meus Serviços</h2>
-            <p class="section-subtitle" id="services-subtitle">
-              Desde funcionalidades individuais até aplicações completas, ofereço uma gama de serviços para dar vida às suas ideias.
-            </p>
+    <!-- Main Content Sections -->
+    <main id="main-content">
+      <!-- SECTION 1: HERO -->
+      <section class="hero-section" id="hero" data-section-name="HERO">
+        <div class="hero-container">
+          <!-- Brand Symbol -->
+          <div class="hero-brand-symbol-wrapper" id="hero-symbol-wrapper">
+            <img
+              src="assets/images/logocoderia-v.svg"
+              alt="Coderia Symbol"
+              class="hero-brand-symbol"
+              id="hero-symbol"
+            />
           </div>
 
-          <!-- 3 Service Cards Grid -->
-          <div class="services-grid-3x" id="services-cards">
-            
-            <article class="service-card" id="service-card-1">
-              <div class="service-icon-box" id="service-icon-1">
-                <img src="assets/images/icon1.svg" alt="IA e Machine Learning">
-              </div>
-              <h3 class="service-title" id="service-title-1">IA e aprendizado de máquina</h3>
-              <p class="service-desc" id="service-desc-1">
-                Desenvolvimento de modelos personalizados, integração de API (OpenAI, etc.) e pipelines de processamento de dados.
-              </p>
-            </article>
+          <!-- Headline -->
+          <h1 class="hero-headline" id="hero-headline">
+            Construindo Aplicações <br />
+            <span class="headline-highlight" id="headline-highlight"
+              >Web Inteligentes</span
+            >
+          </h1>
 
-            <article class="service-card" id="service-card-2">
-              <div class="service-icon-box" id="service-icon-2">
-                <img src="assets/images/icon2.svg" alt="Automação N8N">
-              </div>
-              <h3 class="service-title" id="service-title-2">Automação de fluxo de trabalho N8N</h3>
-              <p class="service-desc" id="service-desc-2">
-                Projetar, construir e manter automações complexas para otimizar seus processos de negócios.
-              </p>
-            </article>
+          <!-- Supporting Text -->
+          <p class="hero-description" id="hero-description">
+            Desenvolvedor FullStack e de IA especializado em automações N8N,
+            Next.js e Node.js para criar aplicações inteligentes, escaláveis e
+            eficientes.
+          </p>
 
-            <article class="service-card" id="service-card-3">
-              <div class="service-icon-box" id="service-icon-3">
-                <img src="assets/images/icon3.svg" alt="FullStack Development">
-              </div>
-              <h3 class="service-title" id="service-title-3">Desenvolvimento FullStack</h3>
-              <p class="service-desc" id="service-desc-3">
-                Desenvolvimento de aplicações de ponta a ponta utilizando Next.js, React, Node.js e bancos de dados modernos.
-              </p>
-            </article>
+          <!-- CTA Actions -->
+          <div class="hero-actions" id="hero-actions">
+            <div class="cta-tooltip-wrapper">
+              <span class="email-tooltip">Em construção!</span>
+              <button class="btn btn-secondary" id="hero-primary-cta">
+                <span class="btn-text">Ver meus projetos</span>
+              </button>
+            </div>
+          </div>
 
+          <!-- Showcase Workspace Preview Frame -->
+          <div class="hero-showcase-frame" id="hero-showcase-frame">
+            <img
+              src="assets/images/wallpaper2.png"
+              alt="n8n Work Example Showcase"
+              loading="eager"
+            />
           </div>
         </div>
       </section>
-    </div>
 
-    <!-- SECTION 4: CALL TO ACTION (#contato) -->
-    <section class="page-section" id="contato" data-section-name="CTA">
-      <div class="section-container">
-        <div class="cta-container" id="cta-container">
-          <h2 class="section-title" id="cta-title">Pronto para construir algo incrível?</h2>
-          <p class="section-subtitle" id="cta-subtitle">
-            Vamos conversar! Estou disponível para projetos freelance e oportunidades de consultoria. Entre em contato para discutirmos como posso ajudar você a alcançar seus objetivos.
-          </p>
+      <!-- SECTION 2: WORKFLOW (#potencialize) -->
+      <section
+        class="page-section"
+        id="potencialize"
+        data-section-name="WORKFLOW"
+      >
+        <div class="section-container">
+          <div class="section-header" id="workflow-header">
+            <h2 class="section-title" id="workflow-title">
+              Potencialize seu fluxo de trabalho com IA.
+            </h2>
+            <p class="section-subtitle" id="workflow-subtitle">
+              Demonstrando minha capacidade de integrar IA, construir automações
+              complexas e entregar soluções robustas de pilha completa.
+            </p>
+          </div>
 
-          <div class="cta-tooltip-wrapper">
-            <span class="email-tooltip">Clique para Copiar o Email</span>
-            <button class="btn btn-primary" id="cta-contact-btn" data-email="hello@coderia.dev">
-              <span class="btn-text">Entre em contato</span>
-            </button>
+          <!-- 4 Project Cards Grid -->
+          <div class="cards-grid-2x2" id="workflow-cards">
+            <article class="card-tec" id="card-tec-1">
+              <div class="card-tec-image-wrapper">
+                <img
+                  src="assets/images/card1.jpg"
+                  alt="Automação de fluxo de trabalho orientada por IA"
+                  class="card-tec-img"
+                  id="card-tec-img-1"
+                />
+              </div>
+              <div class="card-tec-body">
+                <h3 class="card-tec-title" id="card-tec-title-1">
+                  Automação de fluxo de trabalho orientada por IA
+                </h3>
+                <p class="card-tec-desc" id="card-tec-desc-1">
+                  Sistema abrangente de automação de fluxo de trabalho usando
+                  N8N, integrando serviços de IA para otimizar processos de
+                  negócios e aumentar a produtividade.
+                </p>
+              </div>
+            </article>
+
+            <article class="card-tec" id="card-tec-2">
+              <div class="card-tec-image-wrapper">
+                <img
+                  src="assets/images/card2.jpg"
+                  alt="Sincronização automatizada de CRM N8N"
+                  class="card-tec-img"
+                  id="card-tec-img-2"
+                />
+              </div>
+              <div class="card-tec-body">
+                <h3 class="card-tec-title" id="card-tec-title-2">
+                  Sincronização automatizada de CRM N8N
+                </h3>
+                <p class="card-tec-desc" id="card-tec-desc-2">
+                  Automação de fluxos de trabalho complexos, sincronizando dados
+                  em tempo real entre Salesforce, Hubspot e bancos de dados
+                  internos.
+                </p>
+              </div>
+            </article>
+
+            <article class="card-tec" id="card-tec-3">
+              <div class="card-tec-image-wrapper">
+                <img
+                  src="assets/images/card3.jpg"
+                  alt="Painel de análise de dados em tempo real"
+                  class="card-tec-img"
+                  id="card-tec-img-3"
+                />
+              </div>
+              <div class="card-tec-body">
+                <h3 class="card-tec-title" id="card-tec-title-3">
+                  Painel de análise de dados em tempo real
+                </h3>
+                <p class="card-tec-desc" id="card-tec-desc-3">
+                  Aplicação full-stack que utiliza Next.js, Node.js e WebSockets
+                  para visualizar métricas de negócios em tempo real.
+                </p>
+              </div>
+            </article>
+
+            <article class="card-tec" id="card-tec-4">
+              <div class="card-tec-image-wrapper">
+                <img
+                  src="assets/images/card4.jpg"
+                  alt="E-commerce com busca por IA e Chatbot"
+                  class="card-tec-img"
+                  id="card-tec-img-4"
+                />
+              </div>
+              <div class="card-tec-body">
+                <h3 class="card-tec-title" id="card-tec-title-4">
+                  E-commerce com busca por IA e Chatbot
+                </h3>
+                <p class="card-tec-desc" id="card-tec-desc-4">
+                  E-commerce de alto desempenho com um recurso de busca
+                  semântica baseado em IA para uma descoberta de produtos
+                  superior.
+                </p>
+              </div>
+            </article>
           </div>
         </div>
+      </section>
+
+      <!-- SECTION 3: SERVICES (#servicos) -->
+      <div class="services-wrapper" id="servicos" data-section-name="SERVICES">
+        <section class="page-section">
+          <div class="section-container">
+            <div class="section-header" id="services-header">
+              <h2 class="section-title" id="services-title">Meus Serviços</h2>
+              <p class="section-subtitle" id="services-subtitle">
+                Desde funcionalidades individuais até aplicações completas,
+                ofereço uma gama de serviços para dar vida às suas ideias.
+              </p>
+            </div>
+
+            <!-- 3 Service Cards Grid -->
+            <div class="services-grid-3x" id="services-cards">
+              <article class="service-card" id="service-card-1">
+                <div class="service-icon-box" id="service-icon-1">
+                  <img
+                    src="assets/images/icon1.svg"
+                    alt="IA e Machine Learning"
+                  />
+                </div>
+                <h3 class="service-title" id="service-title-1">
+                  IA e aprendizado de máquina
+                </h3>
+                <p class="service-desc" id="service-desc-1">
+                  Desenvolvimento de modelos personalizados, integração de API
+                  (OpenAI, etc.) e pipelines de processamento de dados.
+                </p>
+              </article>
+
+              <article class="service-card" id="service-card-2">
+                <div class="service-icon-box" id="service-icon-2">
+                  <img src="assets/images/icon2.svg" alt="Automação N8N" />
+                </div>
+                <h3 class="service-title" id="service-title-2">
+                  Automação de fluxo de trabalho N8N
+                </h3>
+                <p class="service-desc" id="service-desc-2">
+                  Projetar, construir e manter automações complexas para
+                  otimizar seus processos de negócios.
+                </p>
+              </article>
+
+              <article class="service-card" id="service-card-3">
+                <div class="service-icon-box" id="service-icon-3">
+                  <img
+                    src="assets/images/icon3.svg"
+                    alt="FullStack Development"
+                  />
+                </div>
+                <h3 class="service-title" id="service-title-3">
+                  Desenvolvimento FullStack
+                </h3>
+                <p class="service-desc" id="service-desc-3">
+                  Desenvolvimento de aplicações de ponta a ponta utilizando
+                  Next.js, React, Node.js e bancos de dados modernos.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
 
-  </main>
+      <!-- SECTION 4: CALL TO ACTION (#contato) -->
+      <section class="page-section" id="contato" data-section-name="CTA">
+        <div class="section-container">
+          <div class="cta-container" id="cta-container">
+            <h2 class="section-title" id="cta-title">
+              Pronto para construir algo incrível?
+            </h2>
+            <p class="section-subtitle" id="cta-subtitle">
+              Vamos conversar! Estou disponível para projetos freelance e
+              oportunidades de consultoria. Entre em contato para discutirmos
+              como posso ajudar você a alcançar seus objetivos.
+            </p>
 
-  <!-- SECTION 5: FOOTER -->
-  <footer class="site-footer" id="site-footer" data-section-name="FOOTER">
-    <div class="footer-container">
-      <div class="footer-brand" id="footer-brand">
-        <img src="assets/images/logocompleta.svg" alt="Coderia Logo" height="26">
-        <p class="footer-tagline">AI &amp; FullStack Developer</p>
+            <div class="cta-tooltip-wrapper">
+              <span class="email-tooltip">Clique para Copiar o Email</span>
+              <button
+                class="btn btn-primary"
+                id="cta-contact-btn"
+                data-email="hello@coderia.dev"
+              >
+                <span class="btn-text">Entre em contato</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SECTION 5: FOOTER -->
+    <footer class="site-footer" id="site-footer" data-section-name="FOOTER">
+      <div class="footer-container">
+        <div class="footer-brand" id="footer-brand">
+          <img
+            src="assets/images/logocompleta.svg"
+            alt="Coderia Logo"
+            height="26"
+          />
+          <p class="footer-tagline">AI &amp; FullStack Developer</p>
+        </div>
+
+        <div class="footer-symbol" id="footer-symbol">
+          <img
+            src="assets/images/logocoderia-v.svg"
+            alt="Coderia Logo V"
+            height="28"
+          />
+        </div>
+
+        <div class="footer-social-links" id="footer-social-links">
+          <a
+            href="https://www.linkedin.com/in/tiago-coderia/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="social-link"
+            aria-label="LinkedIn"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+              />
+            </svg>
+          </a>
+          <a
+            href="https://www.github.com/tiago-coderia"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="social-link"
+            aria-label="GitHub"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Construction HUD Indicator (Dev-tool aesthetic) -->
+    <aside class="construction-hud" id="construction-hud" aria-live="polite">
+      <div class="hud-header">
+        <div class="hud-status-led" id="hud-status-led"></div>
+        <span class="hud-title" id="hud-title">BUILDING INTERFACE</span>
+        <span class="hud-percent" id="hud-percent">0%</span>
       </div>
 
-      <div class="footer-symbol" id="footer-symbol">
-        <img src="assets/images/logocoderia-v.svg" alt="Coderia Logo V" height="28">
+      <div class="hud-progress-track">
+        <div
+          class="hud-progress-bar"
+          id="hud-progress-bar"
+          style="width: 0%"
+        ></div>
       </div>
 
-      <div class="footer-social-links" id="footer-social-links">
-        <a href="https://www.linkedin.com/in/tiago-coderia/" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-          </svg>
-        </a>
-        <a href="https://www.github.com/tiago-coderia" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="GitHub">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-        </a>
+      <div class="hud-footer">
+        <span class="hud-counter" id="hud-agents-count">7 BUILDER AGENTS</span>
+        <span class="hud-phase-label" id="hud-phase-label">HERO</span>
       </div>
-    </div>
-  </footer>
+    </aside>
 
-  <!-- Construction HUD Indicator (Dev-tool aesthetic) -->
-  <aside class="construction-hud" id="construction-hud" aria-live="polite">
-    <div class="hud-header">
-      <div class="hud-status-led" id="hud-status-led"></div>
-      <span class="hud-title" id="hud-title">BUILDING INTERFACE</span>
-      <span class="hud-percent" id="hud-percent">0%</span>
-    </div>
-    
-    <div class="hud-progress-track">
-      <div class="hud-progress-bar" id="hud-progress-bar" style="width: 0%;"></div>
-    </div>
-    
-    <div class="hud-footer">
-      <span class="hud-counter" id="hud-agents-count">7 BUILDER AGENTS</span>
-      <span class="hud-phase-label" id="hud-phase-label">HERO</span>
-    </div>
-  </aside>
+    <!-- Restart Experience Button (Floats in after 100% completion) -->
+    <button
+      class="restart-experience-btn"
+      id="restart-experience-btn"
+      aria-label="Reiniciar Construção"
+    >
+      <span class="restart-tooltip">Reiniciar Construção</span>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+      </svg>
+    </button>
 
-  <!-- Restart Experience Button (Floats in after 100% completion) -->
-  <button class="restart-experience-btn" id="restart-experience-btn" aria-label="Reiniciar Construção Swarm">
-    <span class="restart-tooltip">Reiniciar Construção Swarm</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-    </svg>
-  </button>
-
-  <!-- Main ES Module Entry Point -->
-  <script type="module" src="js/main.js"></script>
-</body>
+    <!-- Main ES Module Entry Point -->
+    <script type="module" src="js/main.js"></script>
+  </body>
 </html>

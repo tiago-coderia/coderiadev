@@ -32,3 +32,9 @@
 - [x] T05-02: Implement `cloneAndDrag` in `AgentBoxDrawer` for Figma-style [Alt+Drag] component cloning
 - [x] T05-03: Orchestrate Workflow section: Build Card 1 -> type copy -> clone Card 2 -> type copy -> clone Cards 3 & 4 -> type copy
 - [x] T05-04: Orchestrate Services section: One card at a time with icon insertion, typing copy, and drag-cloning sequentially
+
+## Task Group 6: Headline Letter-by-Letter Typewriter & First Section Scatter
+- [x] T06-01: Implement `prepareHeadlineForTyping` and `typeHeadlineCharacters` for genuine character-by-character typewriter writing (36ms/char)
+- [x] T06-02: Synchronize live cursor position tracking with the writing agent (`TEXTO`) across each typed character
+- [x] T06-03: Implement `scatterInFirstSection` on 100% build completion: auto-scroll to `#hero` and distribute cursors across the first section around headline, symbol, CTA, and showcase frame
+- [x] T06-04: Connect replay restart button to regroup cursors at hero center and replay full sequence cleanly

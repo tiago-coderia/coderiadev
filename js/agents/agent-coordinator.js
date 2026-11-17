@@ -183,13 +183,13 @@ export class AgentCoordinator {
       this.tasks.completeTask('hero-headline', 'HERO');
     }
 
-    // Type headline word-by-word with texto cursor
+    // Type headline letter-by-letter with authentic typewriter writing effect!
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('hero-headline'), texto, { wordDelay: 55 });
+      await this.heroAnimation.typeHeadlineCharacters(document.getElementById('hero-headline'), texto, { charDelay: 36 });
       this.movement.returnToOrbit(texto);
     } else {
-      document.querySelectorAll('#hero-headline .type-word').forEach(w => w.style.opacity = '1');
+      document.querySelectorAll('#hero-headline .type-char').forEach(w => w.style.opacity = '1');
     }
 
     // Highlight gradient glow
@@ -831,47 +831,53 @@ export class AgentCoordinator {
 
   /**
    * On 100% completion:
-   * Scatters cursors across the screen margins away from content,
-   * stops mouse-following, hides HUD, and reveals replay button
+   * Smoothly scrolls back to the first section (#hero), scatters cursors
+   * across the first section around "Construindo Aplicações...", hides HUD,
+   * and reveals the restart replay button
    */
-  finishAndEnableRestart() {
-    this.scatterAcrossScreen();
-
-    // Hide HUD build bar
+  async finishAndEnableRestart() {
+    // 1. Hide HUD build bar
     const hud = document.getElementById('construction-hud');
     if (hud) hud.classList.add('is-hidden');
 
-    // Show Restart Replay Button
+    // 2. Smoothly scroll back to the first section where "Construindo Aplicações" is
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 3. Scatter cursors across the first section around the headline
+    this.scatterInFirstSection();
+
+    // 4. Reveal restart replay button
     const restartBtn = document.getElementById('restart-experience-btn');
     if (restartBtn) restartBtn.classList.add('is-visible');
   }
 
   /**
-   * Scatters cursors across screen margins and gutters so they never obstruct content
+   * Scatters the 7 cursors in aesthetic non-intrusive positions across the FIRST section (#hero)
+   * around "Construindo Aplicações Web Inteligentes", the brand symbol, CTA, and showcase
    */
-  scatterAcrossScreen() {
+  scatterInFirstSection() {
     this.movement.stopMouseOrbit();
 
     const agents = this.engine.getActiveAgents();
-    const scrollY = window.scrollY || window.pageYOffset || 0;
     const w = window.innerWidth;
-    const h = window.innerHeight;
+    const heroEl = document.getElementById('hero');
+    const heroTop = heroEl ? heroEl.offsetTop : 0;
     const gsap = window.gsap;
 
-    // 7 Non-intrusive resting positions in negative space / gutters:
-    // Placed along page borders so content and buttons remain completely clear
-    const restingPositions = [
-      { x: w * 0.05, y: scrollY + h * 0.18, rot: -15 },  // GRID: upper-left margin
-      { x: w * 0.93, y: scrollY + h * 0.24, rot: 15 },   // LAYOUT: upper-right margin
-      { x: w * 0.06, y: scrollY + h * 0.48, rot: -5 },   // TEXTO: mid-left margin
-      { x: w * 0.94, y: scrollY + h * 0.54, rot: 25 },   // COR: mid-right margin
-      { x: w * 0.07, y: scrollY + h * 0.78, rot: -20 },  // FOTO: lower-left margin
-      { x: w * 0.91, y: scrollY + h * 0.80, rot: 10 },   // UI: lower-right margin
-      { x: w * 0.32, y: scrollY + h * 0.86, rot: -12 }   // MOTION: bottom-left gutter
+    // 7 Non-intrusive positions distributed across the first section (#hero):
+    // Positioned around "Construindo Aplicações...", the brand symbol, and showcase margins
+    const heroPositions = [
+      { x: w * 0.12, y: heroTop + 140, rot: -15 }, // GRID: upper-left of hero
+      { x: w * 0.88, y: heroTop + 160, rot: 15 },  // LAYOUT: upper-right of hero
+      { x: w * 0.08, y: heroTop + 330, rot: -8 },  // TEXTO: left of "Construindo Aplicações"
+      { x: w * 0.90, y: heroTop + 400, rot: 18 },  // COR: right of "Web Inteligentes"
+      { x: w * 0.12, y: heroTop + 540, rot: -16 }, // FOTO: left gutter near CTA
+      { x: w * 0.86, y: heroTop + 560, rot: 12 },  // UI: right of CTA button
+      { x: w * 0.20, y: heroTop + 720, rot: -10 }  // MOTION: lower gutter next to showcase
     ];
 
     agents.forEach((agent, i) => {
-      const pos = restingPositions[i % restingPositions.length];
+      const pos = heroPositions[i % heroPositions.length];
       agent.setVisible(true);
       agent.setIdle(false);
       agent.setAction('STANDBY', '');
@@ -880,14 +886,14 @@ export class AgentCoordinator {
         gsap.to(agent, {
           x: pos.x,
           y: pos.y,
-          duration: 1.2 + i * 0.08,
+          duration: 1.5 + i * 0.08,
           ease: 'power3.out',
           onUpdate: () => agent.setPosition(agent.x, agent.y)
         });
         if (agent.svgPointer) {
           gsap.to(agent.svgPointer, {
             rotation: pos.rot,
-            duration: 0.8,
+            duration: 0.9,
             ease: 'power2.out'
           });
         }
@@ -963,6 +969,6 @@ export class AgentCoordinator {
     this.heroAnimation.showFinalStateImmediate();
     this.tasks.tasks.forEach(t => t.completed = true);
     this.tasks.updateHUD(100, 'READY');
-    this.scatterAcrossScreen();
+    this.scatterInFirstSection();
   }
 }

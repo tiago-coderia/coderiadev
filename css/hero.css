@@ -73,6 +73,11 @@
   display: block;
 }
 
+.type-char {
+  display: inline;
+  will-change: opacity;
+}
+
 .headline-highlight {
   display: inline-block;
   color: #38bdf8;
@@ -80,6 +85,7 @@
 }
 
 .headline-highlight,
+.headline-highlight .type-char,
 .headline-highlight .type-word {
   background: linear-gradient(135deg, #ffffff 15%, #c4b5fd 60%, #38bdf8 100%);
   -webkit-background-clip: text;
