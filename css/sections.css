@@ -61,9 +61,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform var(--duration-fast) var(--ease-smooth),
-              border-color var(--duration-fast) var(--ease-smooth),
-              box-shadow var(--duration-fast) var(--ease-smooth);
+  transition:
+    transform var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth);
 }
 
 .card-tec:hover {
@@ -140,8 +141,9 @@
   align-items: center;
   text-align: center;
   gap: var(--space-md);
-  transition: transform var(--duration-fast) var(--ease-smooth),
-              border-color var(--duration-fast) var(--ease-smooth);
+  transition:
+    transform var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth);
 }
 
 .service-card:hover {
@@ -200,7 +202,7 @@
 
 .email-tooltip {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: 0;
   background-color: #2b273b;
   color: var(--text-highlight);
   font-size: 12px;
@@ -211,14 +213,16 @@
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity var(--duration-fast), transform var(--duration-fast);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   border: 1px solid var(--border-subtle);
 }
 
 .cta-tooltip-wrapper:hover .email-tooltip {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(40px);
 }
 
 /* ==========================================================================
@@ -263,7 +267,9 @@
 .social-link {
   color: var(--color-primary);
   opacity: 0.8;
-  transition: opacity var(--duration-fast), transform var(--duration-fast);
+  transition:
+    opacity var(--duration-fast),
+    transform var(--duration-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,7 +288,7 @@
   .cards-grid-2x2 {
     grid-template-columns: 1fr;
   }
-  
+
   .services-grid-3x {
     grid-template-columns: 1fr;
   }

@@ -26,7 +26,9 @@ export class AgentCoordinator {
     this.builtSections = new Set();
     this.activeSection = null;
     this.isBuildingSection = false;
-    this.sectionQueue = [];
+    this.shouldSwitchSection = false;
+    this.agentsDeployed = false;
+    this.isCompleted = false;
     this.observer = null;
 
     this.initRestartButton();
@@ -38,14 +40,12 @@ export class AgentCoordinator {
       return;
     }
 
-    // 1. Build initial Viewport (Header + Hero)
-    await this.buildHeroSection();
-
-    // 2. Attach strict In-View Scroll Observers for remaining sections
+    // 1. Attach strict In-View Scroll Observers immediately so ANY scroll is detected
     this.initScrollObservers();
 
-    // 3. Check if any section is already in view (e.g. page refresh midway)
-    this.checkVisibleSections();
+    // 2. Identify which section is currently in focus (top of page = hero, bottom = footer)
+    const currentFocus = this.getSectionInFocus();
+    await this.buildSection(currentFocus);
   }
 
   delay(ms) {
@@ -57,31 +57,31 @@ export class AgentCoordinator {
   }
 
   /**
-   * SECTION 1: HEADER & HERO CONSTRUCTION
-   * First wireframes -> then typography typed word-by-word -> then buttons & frames
+   * Ensures the 7 builder agents emerge smoothly in the current viewport
    */
-  async buildHeroSection() {
-    this.builtSections.add('hero');
-    this.engine.updateContainerHeight();
-
-    const boxes = this.hero.getTargetBoxes();
-    const gsap = window.gsap;
+  ensureAgentsDeployed() {
+    if (this.agentsDeployed) return;
+    this.agentsDeployed = true;
 
     const activeAgents = this.engine.getActiveAgents();
     this.tasks.setAgentsCount(activeAgents.length);
-    this.tasks.updateHUD(5, 'HERO');
+    const gsap = window.gsap;
 
-    // Make cursors visible right as execution begins with back-out scale
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const centerY = scrollY + window.innerHeight * 0.45;
+    const centerX = window.innerWidth * 0.5;
+
     activeAgents.forEach((ag, idx) => {
       ag.setVisible(true);
       ag.setIdle(false);
+      ag.setPosition(centerX, centerY);
       const el = ag.element;
       if (!el || !gsap) return;
 
       const angle = (idx / activeAgents.length) * Math.PI * 2;
       const dist = 75 + (idx % 3) * 30;
-      const targetX = ag.x + Math.cos(angle) * dist;
-      const targetY = ag.y + Math.sin(angle) * dist;
+      const targetX = centerX + Math.cos(angle) * dist;
+      const targetY = centerY + Math.sin(angle) * dist;
 
       ag.setAction('DEPLOYING', 'is-selecting');
       gsap.fromTo(el,
@@ -97,11 +97,138 @@ export class AgentCoordinator {
       );
     });
 
-    await this.delay(550);
-    this.tasks.completeTask('hero-init', 'HERO');
-
-    // Immediately start signature mouse-following orbital ring!
     this.enterIdleMouseOrbit();
+  }
+
+  /**
+   * Dynamically resolves which section is currently in the visitor's focus
+   */
+  getSectionInFocus() {
+    const sectionIds = ['hero', 'potencialize', 'servicos', 'contato', 'site-footer'];
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const viewportHeight = window.innerHeight;
+    const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+
+    // If near the bottom of the page, site-footer is definitely in view
+    if (scrollY + viewportHeight >= docHeight - 80) {
+      return 'site-footer';
+    }
+
+    // If at the top of the page, hero is in focus
+    if (scrollY <= 60) {
+      return 'hero';
+    }
+
+    const viewportCenter = viewportHeight * 0.5;
+    let bestSection = null;
+    let maxVisibleHeight = -1;
+
+    for (const id of sectionIds) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+
+      const rect = el.getBoundingClientRect();
+      if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) {
+        return id;
+      }
+
+      const visibleTop = Math.max(0, rect.top);
+      const visibleBottom = Math.min(viewportHeight, rect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+      if (visibleHeight > maxVisibleHeight && visibleHeight > 50) {
+        maxVisibleHeight = visibleHeight;
+        bestSection = id;
+      }
+    }
+
+    return bestSection || 'hero';
+  }
+
+  /**
+   * Builds the specified section, or fast-forwards if the user scrolls to another focus
+   */
+  async buildSection(sectionId) {
+    if (this.builtSections.has(sectionId) || this.isBuildingSection) return;
+
+    this.ensureAgentsDeployed();
+    this.isBuildingSection = true;
+    this.activeSection = sectionId;
+    this.shouldSwitchSection = false;
+
+    try {
+      switch (sectionId) {
+        case 'hero':
+          await this.buildHeroSection();
+          break;
+        case 'potencialize':
+          await this.buildWorkflowSection();
+          break;
+        case 'servicos':
+          await this.buildServicesSection();
+          break;
+        case 'contato':
+          await this.buildCtaSection();
+          break;
+        case 'site-footer':
+          await this.buildFooterSection();
+          break;
+      }
+      this.builtSections.add(sectionId);
+    } catch (err) {
+      console.warn(`Error building section ${sectionId}:`, err);
+      this.quickCompleteSection(sectionId);
+    } finally {
+      this.isBuildingSection = false;
+      this.activeSection = null;
+      this.checkAllSectionsComplete();
+
+      // Check if user has scrolled to another unbuilt section while this was building
+      const focus = this.getSectionInFocus();
+      if (!this.builtSections.has(focus)) {
+        this.buildSection(focus);
+      }
+    }
+  }
+
+  quickCompleteSection(sectionId) {
+    this.builtSections.add(sectionId);
+    this.heroAnimation.quickCompleteSection(sectionId);
+
+    const sectionLabels = {
+      'hero': 'HERO',
+      'potencialize': 'WORKFLOW',
+      'servicos': 'SERVICES',
+      'contato': 'CTA',
+      'site-footer': 'FOOTER'
+    };
+
+    const label = sectionLabels[sectionId] || 'BUILDING';
+    this.tasks.completeSectionTasks(label);
+  }
+
+  checkAllSectionsComplete() {
+    const all = ['hero', 'potencialize', 'servicos', 'contato', 'site-footer'];
+    const isAllDone = all.every(id => this.builtSections.has(id));
+    if (isAllDone && !this.isCompleted) {
+      this.isCompleted = true;
+      this.tasks.completeTask('site-ready', 'READY');
+      this.finishAndEnableRestart();
+    }
+  }
+
+  /**
+   * SECTION 1: HEADER & HERO CONSTRUCTION
+   * First wireframes -> then typography typed word-by-word -> then buttons & frames
+   */
+  async buildHeroSection() {
+    this.engine.updateContainerHeight();
+
+    const boxes = this.hero.getTargetBoxes();
+    const gsap = window.gsap;
+
+    this.ensureAgentsDeployed();
+    this.tasks.completeTask('hero-init', 'HERO');
     await this.delay(200);
 
     const grid = this.agent('grid');
@@ -150,6 +277,7 @@ export class AgentCoordinator {
     })();
 
     await Promise.all([promiseHeader, promiseLogo]);
+    if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // 2. Hero Symbol (Wireframe first -> then symbol appears)
     if (foto) {
@@ -167,6 +295,7 @@ export class AgentCoordinator {
       this.heroAnimation.revealHeroSymbol();
       this.tasks.completeTask('hero-symbol', 'HERO');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // 3. Headline Part 1: "Construindo Aplicações" (Wireframe first -> then typed letter-by-letter)
     if (grid) {
@@ -191,6 +320,7 @@ export class AgentCoordinator {
     } else if (headlineMainEl) {
       headlineMainEl.querySelectorAll('.type-char').forEach(w => w.style.opacity = '1');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // Headline Part 2: Selection box for "Web Inteligentes" BEFORE typing ("antes passado a caixa de seleção")
     if (grid) {
@@ -210,6 +340,7 @@ export class AgentCoordinator {
     } else if (headlineHighlightEl) {
       headlineHighlightEl.querySelectorAll('.type-char').forEach(w => w.style.opacity = '1');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // Apply glow effect at the end ("e por fim o efeito de glow")
     if (cor) {
@@ -227,6 +358,7 @@ export class AgentCoordinator {
       await this.heroAnimation.applyHeadlineGlow();
       this.tasks.completeTask('hero-gradient', 'HERO');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // Description (Wireframe first -> then typed word-by-word!)
     if (texto) {
@@ -245,6 +377,7 @@ export class AgentCoordinator {
       document.querySelectorAll('#hero-description .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('hero-copy', 'HERO');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // 4. Primary CTA & Showcase Frame
     if (ui) {
@@ -282,7 +415,8 @@ export class AgentCoordinator {
 
   /**
    * ATTACH STRICT IN-VIEW SCROLL OBSERVERS
-   * Only triggers when section enters the user's field of view (rootMargin: 0px)
+   * Replaces static sequential queue with live focus targeting:
+   * As soon as any section is observed or scrolled into focus, the swarm immediately builds that section!
    */
   initScrollObservers() {
     if (this.observer) {
@@ -291,94 +425,46 @@ export class AgentCoordinator {
 
     const observerOptions = {
       root: null,
-      rootMargin: '0px 0px 0px 0px',
-      threshold: [0.15, 0.2]
+      rootMargin: '0px',
+      threshold: [0.1, 0.25, 0.5]
     };
 
     this.observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.15) {
-          const sectionId = entry.target.id;
-          if (!this.builtSections.has(sectionId)) {
-            this.queueSection(sectionId);
-          }
+      const focus = this.getSectionInFocus();
+      if (!this.builtSections.has(focus)) {
+        if (this.isBuildingSection && this.activeSection !== focus) {
+          this.shouldSwitchSection = true;
+        } else if (!this.isBuildingSection) {
+          this.buildSection(focus);
         }
-      });
+      }
     }, observerOptions);
 
-    ['potencialize', 'servicos', 'contato', 'site-footer'].forEach(id => {
+    ['hero', 'potencialize', 'servicos', 'contato', 'site-footer'].forEach(id => {
       const el = document.getElementById(id);
       if (el) this.observer.observe(el);
     });
 
-    // Fallback bottom of page scroll check for footer
+    // Throttled scroll listener to guarantee instant response even during rapid scrolling
+    let scrollTicking = false;
     this.scrollCheckFn = () => {
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      const scrollPos = scrollY + window.innerHeight;
-      const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-
-      if (scrollPos >= docHeight - 80) {
-        if (!this.builtSections.has('site-footer')) {
-          this.queueSection('site-footer');
-        }
+      if (!scrollTicking) {
+        requestAnimationFrame(() => {
+          const focus = this.getSectionInFocus();
+          if (!this.builtSections.has(focus)) {
+            if (this.isBuildingSection && this.activeSection !== focus) {
+              this.shouldSwitchSection = true;
+            } else if (!this.isBuildingSection) {
+              this.buildSection(focus);
+            }
+          }
+          scrollTicking = false;
+        });
+        scrollTicking = true;
       }
     };
 
     window.addEventListener('scroll', this.scrollCheckFn, { passive: true });
-  }
-
-  checkVisibleSections() {
-    ['potencialize', 'servicos', 'contato', 'site-footer'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && !this.builtSections.has(id)) {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 80 && rect.bottom > 80) {
-          this.queueSection(id);
-        }
-      }
-    });
-  }
-
-  queueSection(sectionId) {
-    if (this.builtSections.has(sectionId)) return;
-    this.builtSections.add(sectionId);
-
-    if (this.isBuildingSection) {
-      this.sectionQueue.push(sectionId);
-      return;
-    }
-
-    this.processSection(sectionId);
-  }
-
-  async processSection(sectionId) {
-    this.isBuildingSection = true;
-    this.activeSection = sectionId;
-
-    try {
-      switch (sectionId) {
-        case 'potencialize':
-          await this.buildWorkflowSection();
-          break;
-        case 'servicos':
-          await this.buildServicesSection();
-          break;
-        case 'contato':
-          await this.buildCtaSection();
-          break;
-        case 'site-footer':
-          await this.buildFooterSection();
-          break;
-      }
-    } catch (err) {
-      console.warn(`Error building section ${sectionId}:`, err);
-    } finally {
-      this.isBuildingSection = false;
-      if (this.sectionQueue.length > 0) {
-        const nextId = this.sectionQueue.shift();
-        this.processSection(nextId);
-      }
-    }
   }
 
   /**
@@ -420,6 +506,7 @@ export class AgentCoordinator {
       document.querySelectorAll('#workflow-title .type-word, #workflow-subtitle .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('wf-header', 'WORKFLOW');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // 3. Card 1: Build from scratch
     if (foto) {
@@ -449,6 +536,7 @@ export class AgentCoordinator {
     } else {
       document.querySelectorAll('#card-tec-title-1 .type-word, #card-tec-desc-1 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // 4. Card 2: Clone to the side (Card 1 -> Card 2)
     if (ui) {
@@ -479,6 +567,7 @@ export class AgentCoordinator {
     } else {
       document.querySelectorAll('#card-tec-title-2 .type-word, #card-tec-desc-2 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // 5. Clone 2 more downwards (Card 1 -> Card 3, and Card 2 -> Card 4)
     const cloneCard3 = async () => {
@@ -577,6 +666,7 @@ export class AgentCoordinator {
       document.querySelectorAll('#services-title .type-word, #services-subtitle .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('srv-header', 'SERVICES');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('servicos'); return; }
 
     // 3. Card 1: Build first card from scratch
     if (layout) {
@@ -606,6 +696,7 @@ export class AgentCoordinator {
     } else {
       document.querySelectorAll('#service-title-1 .type-word, #service-desc-1 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('servicos'); return; }
 
     // 4. Card 2: Clone from Card 1 (Alt+Drag)
     if (ui) {
@@ -636,6 +727,7 @@ export class AgentCoordinator {
     } else {
       document.querySelectorAll('#service-title-2 .type-word, #service-desc-2 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('servicos'); return; }
 
     // 5. Card 3: Clone from Card 2 (Alt+Drag)
     if (cor) {
@@ -694,6 +786,7 @@ export class AgentCoordinator {
     } else {
       this.tasks.completeTask('cta-frame', 'CTA');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('contato'); return; }
 
     // 2. Title & Subtitle: Wireframe first, then typed word-by-word!
     if (texto) {
@@ -723,6 +816,7 @@ export class AgentCoordinator {
       document.querySelectorAll('#cta-title .type-word, #cta-subtitle .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('cta-copy', 'CTA');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('contato'); return; }
 
     // 3. Contact Button: Wireframe first, then button materializes!
     if (motion) {
@@ -744,7 +838,7 @@ export class AgentCoordinator {
 
   /**
    * SECTION 5: FOOTER (#site-footer) & 100% COMPLETION
-   * Wireframe container -> wireframe brand -> wireframe symbol & socials -> 100% scatter!
+   * Wireframe container -> wireframe brand -> wireframe symbol & socials
    */
   async buildFooterSection() {
     this.engine.updateContainerHeight();
@@ -769,6 +863,7 @@ export class AgentCoordinator {
     } else {
       this.tasks.completeTask('ft-frame', 'FOOTER');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('site-footer'); return; }
 
     // 2. Layout frames footer brand logo
     if (layout) {
@@ -786,6 +881,7 @@ export class AgentCoordinator {
       this.heroAnimation.revealFooterBrand();
       this.tasks.completeTask('ft-brand', 'FOOTER');
     }
+    if (this.shouldSwitchSection) { this.quickCompleteSection('site-footer'); return; }
 
     // 3. Foto frames footer symbol & Motion frames social links
     const promiseSymbol = (async () => {
@@ -822,14 +918,6 @@ export class AgentCoordinator {
     })();
 
     await Promise.all([promiseSymbol, promiseSocials]);
-
-    // 100% Full Site Ready!
-    this.tasks.completeTask('site-ready', 'READY');
-
-    await this.delay(650);
-
-    // 4. Complete cleanup: scatter cursors across screen margins, hide HUD, reveal replay button
-    this.finishAndEnableRestart();
   }
 
   /**
@@ -944,7 +1032,9 @@ export class AgentCoordinator {
       // 4. Reset section states and tasks
       this.builtSections.clear();
       this.isBuildingSection = false;
-      this.sectionQueue = [];
+      this.shouldSwitchSection = false;
+      this.isCompleted = false;
+      this.agentsDeployed = false;
 
       this.heroAnimation.initElementStates();
       this.tasks.reset();

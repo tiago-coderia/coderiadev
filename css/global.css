@@ -129,3 +129,106 @@ body {
   background-color: rgba(59, 130, 246, 0.3);
   color: var(--text-highlight);
 }
+
+/* ==========================================================================
+   Coderia.dev — High-Tech Preloader Styles
+   ========================================================================== */
+
+.site-preloader {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.45s var(--ease-smooth), visibility 0.45s var(--ease-smooth);
+}
+
+.site-preloader.is-dismissed {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preloader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.preloader-symbol-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preloader-symbol {
+  filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.4));
+  animation: preloaderPulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes preloaderPulse {
+  0% {
+    transform: scale(0.96);
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.25));
+  }
+  100% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.65));
+  }
+}
+
+.preloader-progress-track {
+  width: 180px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.preloader-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+.preloader-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preloader-status-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: ledBlink 1.2s ease-in-out infinite;
+}
+
+.preloader-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* Hide entire page content while loading to eliminate any visual flash */
+body.is-loading #main-content,
+body.is-loading .site-header,
+body.is-loading .site-footer,
+body.is-loading .agents-layer,
+body.is-loading .construction-hud {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}

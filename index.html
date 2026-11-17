@@ -33,8 +33,40 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <!-- Motion One CDN -->
     <script src="https://cdn.jsdelivr.net/npm/motion@10.16.2/dist/motion.js"></script>
+
+    <!-- Force initial top scroll before any layout paint -->
+    <script>
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    </script>
   </head>
   <body class="is-loading">
+    <!-- Sleek High-Tech Preloader -->
+    <div id="site-preloader" class="site-preloader" aria-label="Carregando Coderia.dev">
+      <div class="preloader-content">
+        <div class="preloader-symbol-wrap">
+          <img
+            src="assets/images/logocoderia-v.svg"
+            alt="Coderia"
+            class="preloader-symbol"
+            width="64"
+            height="48"
+          />
+        </div>
+        <div class="preloader-progress-track">
+          <div class="preloader-progress-bar" id="preloader-progress-bar"></div>
+        </div>
+        <div class="preloader-meta">
+          <span class="preloader-status-led" aria-hidden="true"></span>
+          <span class="preloader-text" id="preloader-text">INICIALIZANDO AGENTES...</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Engineering Background Grid & Ambient Glow -->
     <div class="bg-grid-pattern" aria-hidden="true"></div>
     <div class="bg-radial-gradient" aria-hidden="true"></div>

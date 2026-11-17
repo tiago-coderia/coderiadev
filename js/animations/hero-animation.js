@@ -434,4 +434,58 @@ export class HeroAnimation {
       if (highlight) highlight.classList.add('has-glow');
     }
   }
+
+  /**
+   * Fast-completes all visual elements of a specific section
+   * Used when user scrolls away to immediately materialize any pending elements
+   */
+  quickCompleteSection(sectionId) {
+    const gsap = window.gsap;
+    if (!gsap) return;
+
+    switch (sectionId) {
+      case 'hero':
+        gsap.to('#site-header', { opacity: 1, y: 0, duration: 0.3 });
+        this.revealLogo();
+        this.revealNav();
+        this.revealHeroSymbol();
+        this.revealPrimaryCta();
+        this.revealShowcaseFrame();
+        document.querySelectorAll('#hero .type-char, #hero .type-word').forEach(el => el.style.opacity = '1');
+        gsap.set('#hero-headline, #hero-description, #hero-actions', { opacity: 1, y: 0, scale: 1 });
+        this.applyHeadlineGlow();
+        break;
+
+      case 'potencialize':
+        gsap.set('#workflow-header, #workflow-title, #workflow-subtitle', { opacity: 1, y: 0 });
+        document.querySelectorAll('#potencialize .type-word').forEach(el => el.style.opacity = '1');
+        for (let i = 1; i <= 4; i++) {
+          this.revealWorkflowCard(i);
+          this.revealWorkflowCardImage(i);
+        }
+        break;
+
+      case 'servicos':
+        gsap.set('#services-header, #services-title, #services-subtitle', { opacity: 1, y: 0 });
+        document.querySelectorAll('#servicos .type-word').forEach(el => el.style.opacity = '1');
+        for (let i = 1; i <= 3; i++) {
+          this.revealServiceCard(i);
+          this.revealServiceIcon(i);
+        }
+        break;
+
+      case 'contato':
+        gsap.set('#cta-container, #cta-title, #cta-subtitle', { opacity: 1, y: 0 });
+        document.querySelectorAll('#contato .type-word').forEach(el => el.style.opacity = '1');
+        this.revealCtaButton();
+        break;
+
+      case 'site-footer':
+        gsap.set('#site-footer', { opacity: 1 });
+        this.revealFooterBrand();
+        this.revealFooterSymbol();
+        this.revealFooterSocials();
+        break;
+    }
+  }
 }

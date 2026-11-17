@@ -18,17 +18,34 @@ class App {
   }
 
   async init() {
+    // 0. Enforce scroll position strictly at top (0, 0) before any layout calculations
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
       await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
     }
 
+    const preloaderEl = document.getElementById('site-preloader');
+    const preloaderBar = document.getElementById('preloader-progress-bar');
+    const preloaderText = document.getElementById('preloader-text');
+
+    if (preloaderBar) preloaderBar.style.width = '45%';
+
     try {
-      // 1. Initialize UI components & set initial hidden states
+      // 1. Initialize UI components & set initial hidden states (strictly zero visibility behind preloader)
       const navigation = new Navigation();
       const hero = new Hero();
       const heroAnimation = new HeroAnimation(hero);
       const transitions = new Transitions();
+
+      if (preloaderBar) preloaderBar.style.width = '80%';
+      if (preloaderText) preloaderText.textContent = 'CONECTANDO SWARM...';
 
       // 2. Kick off intro visual boot
       IntroAnimation.start();
@@ -37,17 +54,33 @@ class App {
       const taskEngine = new AgentTasks();
       const agentEngine = new AgentEngine();
 
-      // 4. Initialize and run choreography coordinator
+      // 4. Initialize choreography coordinator
       const coordinator = new AgentCoordinator(agentEngine, hero, heroAnimation, taskEngine);
-      
-      // Allow slight breather before choreography kicks in for seamless page load
+
+      if (preloaderBar) preloaderBar.style.width = '100%';
+      if (preloaderText) preloaderText.textContent = 'PRONTO';
+
+      // 5. Dismiss preloader smoothly and reveal the pristine canvas
       setTimeout(() => {
-        coordinator.start();
-      }, 350);
+        // Enforce scroll at 0 again right before dismiss to ensure absolute top start
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+        if (preloaderEl) {
+          preloaderEl.classList.add('is-dismissed');
+        }
+        document.body.classList.remove('is-loading');
+
+        setTimeout(() => {
+          coordinator.start();
+        }, 200);
+      }, 400);
 
     } catch (err) {
       console.error('Coderia.dev bootstrap error:', err);
       // Graceful fallback to fully displayed interface
+      if (preloaderEl) preloaderEl.classList.add('is-dismissed');
       document.body.classList.remove('is-loading');
     }
   }

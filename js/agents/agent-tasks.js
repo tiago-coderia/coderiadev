@@ -66,6 +66,21 @@ export class AgentTasks {
     return percent;
   }
 
+  completeSectionTasks(sectionName) {
+    this.tasks.forEach(t => {
+      if (t.section === sectionName) {
+        t.completed = true;
+      }
+    });
+
+    const completedCount = this.tasks.filter(t => t.completed).length;
+    const totalCount = this.tasks.length;
+    const percent = Math.min(100, Math.round((completedCount / totalCount) * 100));
+
+    this.updateHUD(percent, sectionName);
+    return percent;
+  }
+
   updateHUD(percent, phaseLabel) {
     if (this.hudPercent) {
       this.hudPercent.textContent = `${percent}%`;

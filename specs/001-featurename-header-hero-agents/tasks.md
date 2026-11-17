@@ -45,3 +45,9 @@
 - [x] T07-03: Draw selection box on `boxes.headlineHighlight()` before typing "Web Inteligentes"
 - [x] T07-04: Type "Web Inteligentes" letter-by-letter as clean white text (no instant appearance, no pre-rendered glow/gradient/underline)
 - [x] T07-05: Apply glow effect at the end via `agent: cor`: activate `.has-glow`, gradient fill, text-shadow bloom, and expanding underline
+
+## Task Group 8: Preloader, Scroll 0, Centered Builder Bar & Viewport-Focused Swarm
+- [x] T08-01: Implement high-tech `#site-preloader` with pulsing Coderia symbol and gradient progress bar, hiding all site elements during load
+- [x] T08-02: Enforce instant `window.scrollTo(0, 0)` with `history.scrollRestoration = 'manual'` so the page always starts at the top
+- [x] T08-03: Center builder bar (`.construction-hud`) at the bottom of the viewport (`left: 50%; transform: translateX(-50%)`) across desktop and mobile
+- [x] T08-04: Implement dynamic `getSectionInFocus()` and responsive section switching in `AgentCoordinator` so the swarm immediately constructs whichever section is currently in view (e.g. scrolling directly to footer constructs footer first)
