@@ -26,3 +26,9 @@
 - [x] T04-02: Implement `typeTextWords` word-by-word realistic typing engine with live `texto` cursor position tracking
 - [x] T04-03: Implement `scatterAcrossScreen` at 100% completion (cursors fly to screen margins and stop mouse-tracking)
 - [x] T04-04: Implement smooth center regrouping and scroll-to-top on replay restart
+
+## Task Group 5: Highlight Gradient Fix & Alt+Drag Clone Animations
+- [x] T05-01: Fix obscured text clipping on `.headline-highlight` ("Web Inteligentes") ensuring vivid, crisp luminescence
+- [x] T05-02: Implement `cloneAndDrag` in `AgentBoxDrawer` for Figma-style [Alt+Drag] component cloning
+- [x] T05-03: Orchestrate Workflow section: Build Card 1 -> type copy -> clone Card 2 -> type copy -> clone Cards 3 & 4 -> type copy
+- [x] T05-04: Orchestrate Services section: One card at a time with icon insertion, typing copy, and drag-cloning sequentially

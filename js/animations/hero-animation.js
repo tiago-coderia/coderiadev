@@ -1,7 +1,8 @@
 /**
  * Coderia.dev — Section Elements Reveal & Word-by-Word Typing Animations
- * Guarantees content ONLY appears AFTER the wireframe box is drawn.
- * Implements realistic word-by-word typing for text elements.
+ * Guarantees content ONLY appears AFTER the wireframe box or clone is drawn.
+ * Implements realistic word-by-word typing for text elements,
+ * card image and icon mounting, and preserves gradient text clipping.
  */
 
 export class HeroAnimation {
@@ -12,7 +13,7 @@ export class HeroAnimation {
 
   /**
    * Prepares a text container by wrapping text nodes into word spans
-   * Preserves inner HTML tags, line breaks, and whitespace
+   * Preserves inner HTML tags, line breaks, whitespace, and text-clip gradients
    */
   prepareTextForTyping(element) {
     if (!element) return [];
@@ -21,7 +22,11 @@ export class HeroAnimation {
     if (existingWords.length > 0) {
       existingWords.forEach(w => {
         w.style.opacity = '0';
-        w.style.display = 'inline-block';
+        if (!w.closest('.headline-highlight')) {
+          w.style.display = 'inline-block';
+        } else {
+          w.style.display = 'inline';
+        }
       });
       return Array.from(existingWords);
     }
@@ -31,6 +36,7 @@ export class HeroAnimation {
         const text = node.textContent;
         if (!text.trim()) return null;
 
+        const isHighlight = node.parentElement && node.parentElement.closest('.headline-highlight');
         const frag = document.createDocumentFragment();
         const tokens = text.split(/(\s+)/);
         tokens.forEach(token => {
@@ -41,8 +47,8 @@ export class HeroAnimation {
             const span = document.createElement('span');
             span.className = 'type-word';
             span.style.opacity = '0';
-            span.style.display = 'inline-block';
-            span.style.willChange = 'opacity, transform';
+            span.style.display = isHighlight ? 'inline' : 'inline-block';
+            span.style.willChange = 'opacity';
             span.textContent = token;
             frag.appendChild(span);
           }
@@ -71,7 +77,7 @@ export class HeroAnimation {
   async typeTextWords(element, agent = null, options = {}) {
     if (!element) return;
     const words = this.prepareTextForTyping(element);
-    const wordDelay = options.wordDelay || 50;
+    const wordDelay = options.wordDelay || 45;
     const gsap = window.gsap;
 
     element.style.opacity = '1';
@@ -83,17 +89,26 @@ export class HeroAnimation {
 
     for (let i = 0; i < words.length; i++) {
       const wordSpan = words[i];
+      const isHighlight = wordSpan.closest('.headline-highlight');
 
       if (gsap) {
-        gsap.fromTo(wordSpan,
-          { opacity: 0, y: 3 },
-          { opacity: 1, y: 0, duration: 0.12, ease: 'power1.out' }
-        );
+        if (isHighlight) {
+          // Never apply transform to text-clip gradient words to protect Blink text rendering
+          gsap.fromTo(wordSpan,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.12, ease: 'power1.out' }
+          );
+        } else {
+          gsap.fromTo(wordSpan,
+            { opacity: 0, y: 3 },
+            { opacity: 1, y: 0, duration: 0.1, ease: 'power1.out' }
+          );
+        }
       } else {
         wordSpan.style.opacity = '1';
       }
 
-      // Cursor follows the typing position dynamically
+      // Cursor dynamically follows the typing position
       if (agent && i % 2 === 0) {
         const rect = wordSpan.getBoundingClientRect();
         const scrollX = window.scrollX || window.pageXOffset || 0;
@@ -141,7 +156,16 @@ export class HeroAnimation {
     if (wfTitle) this.prepareTextForTyping(wfTitle);
     const wfSub = document.getElementById('workflow-subtitle');
     if (wfSub) this.prepareTextForTyping(wfSub);
-    gsap.set('.card-tec', { opacity: 0, y: 30, scale: 0.96 });
+
+    // 4 Workflow Cards: containers, images, titles, and descriptions all start hidden!
+    for (let i = 1; i <= 4; i++) {
+      gsap.set(`#card-tec-${i}`, { opacity: 0, scale: 0.96, y: 20 });
+      gsap.set(`#card-tec-img-${i}`, { opacity: 0, scale: 0.9 });
+      const t = document.getElementById(`card-tec-title-${i}`);
+      if (t) this.prepareTextForTyping(t);
+      const d = document.getElementById(`card-tec-desc-${i}`);
+      if (d) this.prepareTextForTyping(d);
+    }
 
     // Services initial states
     gsap.set('#services-title', { opacity: 0 });
@@ -150,7 +174,16 @@ export class HeroAnimation {
     if (srvTitle) this.prepareTextForTyping(srvTitle);
     const srvSub = document.getElementById('services-subtitle');
     if (srvSub) this.prepareTextForTyping(srvSub);
-    gsap.set('.service-card', { opacity: 0, y: 30, scale: 0.96 });
+
+    // 3 Service Cards: containers, icons, titles, and descriptions all start hidden!
+    for (let i = 1; i <= 3; i++) {
+      gsap.set(`#service-card-${i}`, { opacity: 0, scale: 0.96, y: 20 });
+      gsap.set(`#service-icon-${i}`, { opacity: 0, scale: 0.7 });
+      const t = document.getElementById(`service-title-${i}`);
+      if (t) this.prepareTextForTyping(t);
+      const d = document.getElementById(`service-desc-${i}`);
+      if (d) this.prepareTextForTyping(d);
+    }
 
     // CTA initial states
     gsap.set('#cta-title', { opacity: 0 });
@@ -193,8 +226,8 @@ export class HeroAnimation {
     const highlight = document.getElementById('headline-highlight');
     if (!gsap || !highlight) return;
     gsap.fromTo(highlight, 
-      { filter: 'brightness(1)' },
-      { filter: 'brightness(1.5) drop-shadow(0 0 18px rgba(169, 149, 201, 0.45))', duration: 0.5, yoyo: true, repeat: 1 }
+      { filter: 'brightness(1) drop-shadow(0 0 12px rgba(56, 189, 248, 0.4))' },
+      { filter: 'brightness(1.5) drop-shadow(0 0 24px rgba(56, 189, 248, 0.8))', duration: 0.5, yoyo: true, repeat: 1, clearProps: 'filter' }
     );
   }
 
@@ -215,7 +248,14 @@ export class HeroAnimation {
     const gsap = window.gsap;
     const card = document.getElementById(`card-tec-${index}`);
     if (!gsap || !card) return;
-    gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.3)' });
+    gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'back.out(1.3)' });
+  }
+
+  revealWorkflowCardImage(index) {
+    const gsap = window.gsap;
+    const img = document.getElementById(`card-tec-img-${index}`);
+    if (!gsap || !img) return;
+    gsap.to(img, { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out' });
   }
 
   // Section 3: Services reveals
@@ -223,7 +263,14 @@ export class HeroAnimation {
     const gsap = window.gsap;
     const card = document.getElementById(`service-card-${index}`);
     if (!gsap || !card) return;
-    gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'back.out(1.3)' });
+    gsap.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'back.out(1.3)' });
+  }
+
+  revealServiceIcon(index) {
+    const gsap = window.gsap;
+    const icon = document.getElementById(`service-icon-${index}`);
+    if (!gsap || !icon) return;
+    gsap.to(icon, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.8)' });
   }
 
   // Section 4: CTA reveals
@@ -258,8 +305,8 @@ export class HeroAnimation {
     const selectors = [
       '.brand-logo', '.nav-item', '#header-contact-btn',
       '#hero-symbol', '#hero-headline', '#hero-description', '#hero-primary-cta', '#hero-showcase-frame',
-      '#workflow-title', '#workflow-subtitle', '.card-tec',
-      '#services-title', '#services-subtitle', '.service-card',
+      '#workflow-title', '#workflow-subtitle', '.card-tec', '.card-tec-img',
+      '#services-title', '#services-subtitle', '.service-card', '.service-icon-box',
       '#cta-title', '#cta-subtitle', '#cta-contact-btn',
       '#footer-brand', '#footer-symbol', '#footer-social-links'
     ];

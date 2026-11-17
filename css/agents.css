@@ -120,6 +120,31 @@
   transition: opacity 0.4s var(--ease-smooth), transform 0.4s var(--ease-smooth);
 }
 
+/* Alt+Drag Clone Ghost Frame */
+.wireframe-clone-box {
+  position: absolute;
+  pointer-events: none;
+  z-index: 93;
+  border-width: 1.5px;
+  border-style: dashed;
+  box-sizing: border-box;
+  border-radius: 14px;
+  will-change: left, top, transform, opacity;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  transition: opacity 0.35s var(--ease-smooth), transform 0.35s var(--ease-smooth);
+}
+
+.wireframe-clone-box.is-snapping {
+  transform: scale(0.98);
+  border-style: solid;
+}
+
+.wireframe-clone-box.is-complete {
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity 0.3s var(--ease-smooth), transform 0.3s var(--ease-smooth);
+}
+
 /* 4 Corner Resize Handles */
 .wireframe-handle {
   position: absolute;

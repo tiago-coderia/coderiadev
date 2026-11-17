@@ -6,8 +6,11 @@
  * Implements:
  * 1. Wireframe FIRST, content materialization/typing AFTER (strict zero pre-appearance)
  * 2. Word-by-word realistic typing effect with live cursor tracking
- * 3. 100% completion scatter across screen margins (no mouse-following, non-intrusive)
- * 4. Full replay restart with smooth scroll to top and center reassembly
+ * 3. Dynamic Alt+Drag clone animations:
+ *    - Workflow: Build Card 1 -> Type text -> Clone to Card 2 -> Type text -> Clone 2 more -> Edit texts
+ *    - Services: One card at a time -> Build Card 1 -> Mount icon -> Type text -> Clone to Card 2 -> Mount icon -> Type text -> Clone to Card 3 -> Mount icon -> Type text
+ * 4. 100% completion scatter across screen margins (no mouse-following, non-intrusive)
+ * 5. Full replay restart with smooth scroll to top and center reassembly
  */
 
 export class AgentCoordinator {
@@ -183,7 +186,7 @@ export class AgentCoordinator {
     // Type headline word-by-word with texto cursor
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('hero-headline'), texto, { wordDelay: 60 });
+      await this.heroAnimation.typeTextWords(document.getElementById('hero-headline'), texto, { wordDelay: 55 });
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#hero-headline .type-word').forEach(w => w.style.opacity = '1');
@@ -215,7 +218,7 @@ export class AgentCoordinator {
         returnToOrbit: false
       });
 
-      await this.heroAnimation.typeTextWords(document.getElementById('hero-description'), texto, { wordDelay: 42 });
+      await this.heroAnimation.typeTextWords(document.getElementById('hero-description'), texto, { wordDelay: 38 });
       this.tasks.completeTask('hero-copy', 'HERO');
       this.movement.returnToOrbit(texto);
     } else {
@@ -360,7 +363,10 @@ export class AgentCoordinator {
 
   /**
    * SECTION 2: WORKFLOW (#potencialize)
-   * Wireframe header -> types title/subtitle -> wireframe cards -> reveals cards
+   * 1. Frame header & type title/subtitle word-by-word
+   * 2. Build Card 1 from scratch -> type Card 1 texts
+   * 3. Alt+Drag clone Card 1 -> Card 2 -> type Card 2 texts
+   * 4. Alt+Drag clone 2 more (Card 1 -> Card 3, Card 2 -> Card 4) -> edit/type texts
    */
   async buildWorkflowSection() {
     this.engine.updateContainerHeight();
@@ -386,8 +392,8 @@ export class AgentCoordinator {
     // 2. Type Workflow Title and Subtitle word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('workflow-title'), texto, { wordDelay: 50 });
-      await this.heroAnimation.typeTextWords(document.getElementById('workflow-subtitle'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('workflow-title'), texto, { wordDelay: 45 });
+      await this.heroAnimation.typeTextWords(document.getElementById('workflow-subtitle'), texto, { wordDelay: 32 });
       this.tasks.completeTask('wf-header', 'WORKFLOW');
       this.movement.returnToOrbit(texto);
     } else {
@@ -395,41 +401,130 @@ export class AgentCoordinator {
       this.tasks.completeTask('wf-header', 'WORKFLOW');
     }
 
-    // 3. Concurrent Cards Construction (Card is 100% hidden until wireframe completes!)
-    const buildCard = async (agent, boxFn, tag, cardIdx, taskId) => {
-      if (agent) {
-        await this.boxDrawer.drawBox({
-          agent: agent,
-          box: boxFn(),
-          tagName: tag,
+    // 3. Card 1: Build from scratch
+    if (foto) {
+      await this.boxDrawer.drawBox({
+        agent: foto,
+        box: boxes.workflowCard1(),
+        tagName: '<card.ai-workflow [Master]>',
+        duration: 0.65,
+        onMaterialize: () => {
+          this.heroAnimation.revealWorkflowCard(1);
+          this.heroAnimation.revealWorkflowCardImage(1);
+          this.tasks.completeTask('wf-card-1', 'WORKFLOW');
+        }
+      });
+    } else {
+      this.heroAnimation.revealWorkflowCard(1);
+      this.heroAnimation.revealWorkflowCardImage(1);
+      this.tasks.completeTask('wf-card-1', 'WORKFLOW');
+    }
+
+    // Type Card 1 title & description word-by-word
+    if (texto) {
+      this.movement.leaveOrbit(texto);
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-1'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-1'), texto, { wordDelay: 26 });
+      this.movement.returnToOrbit(texto);
+    } else {
+      document.querySelectorAll('#card-tec-title-1 .type-word, #card-tec-desc-1 .type-word').forEach(w => w.style.opacity = '1');
+    }
+
+    // 4. Card 2: Clone to the side (Card 1 -> Card 2)
+    if (ui) {
+      await this.boxDrawer.cloneAndDrag({
+        agent: ui,
+        fromBox: boxes.workflowCard1(),
+        toBox: boxes.workflowCard2(),
+        tagName: '<card.crm-n8n [Clone]>',
+        duration: 0.65,
+        onLand: () => {
+          this.heroAnimation.revealWorkflowCard(2);
+          this.heroAnimation.revealWorkflowCardImage(2);
+          this.tasks.completeTask('wf-card-2', 'WORKFLOW');
+        }
+      });
+    } else {
+      this.heroAnimation.revealWorkflowCard(2);
+      this.heroAnimation.revealWorkflowCardImage(2);
+      this.tasks.completeTask('wf-card-2', 'WORKFLOW');
+    }
+
+    // Edit/type Card 2 title & description word-by-word
+    if (texto) {
+      this.movement.leaveOrbit(texto);
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-2'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-2'), texto, { wordDelay: 26 });
+      this.movement.returnToOrbit(texto);
+    } else {
+      document.querySelectorAll('#card-tec-title-2 .type-word, #card-tec-desc-2 .type-word').forEach(w => w.style.opacity = '1');
+    }
+
+    // 5. Clone 2 more downwards (Card 1 -> Card 3, and Card 2 -> Card 4)
+    const cloneCard3 = async () => {
+      if (cor) {
+        await this.boxDrawer.cloneAndDrag({
+          agent: cor,
+          fromBox: boxes.workflowCard1(),
+          toBox: boxes.workflowCard3(),
+          tagName: '<card.analytics [Clone]>',
           duration: 0.65,
-          onMaterialize: () => {
-            this.heroAnimation.revealWorkflowCard(cardIdx);
-            this.tasks.completeTask(taskId, 'WORKFLOW');
+          onLand: () => {
+            this.heroAnimation.revealWorkflowCard(3);
+            this.heroAnimation.revealWorkflowCardImage(3);
+            this.tasks.completeTask('wf-card-3', 'WORKFLOW');
           }
         });
       } else {
-        this.heroAnimation.revealWorkflowCard(cardIdx);
-        this.tasks.completeTask(taskId, 'WORKFLOW');
+        this.heroAnimation.revealWorkflowCard(3);
+        this.heroAnimation.revealWorkflowCardImage(3);
+        this.tasks.completeTask('wf-card-3', 'WORKFLOW');
       }
     };
 
-    // Parallel pair 1: Cards 1 & 2
-    await Promise.all([
-      buildCard(foto, boxes.workflowCard1, '<card.ai-workflow>', 1, 'wf-card-1'),
-      buildCard(ui, boxes.workflowCard2, '<card.crm-n8n>', 2, 'wf-card-2')
-    ]);
+    const cloneCard4 = async () => {
+      await this.delay(120);
+      if (layout) {
+        await this.boxDrawer.cloneAndDrag({
+          agent: layout,
+          fromBox: boxes.workflowCard2(),
+          toBox: boxes.workflowCard4(),
+          tagName: '<card.ecommerce [Clone]>',
+          duration: 0.65,
+          onLand: () => {
+            this.heroAnimation.revealWorkflowCard(4);
+            this.heroAnimation.revealWorkflowCardImage(4);
+            this.tasks.completeTask('wf-card-4', 'WORKFLOW');
+          }
+        });
+      } else {
+        this.heroAnimation.revealWorkflowCard(4);
+        this.heroAnimation.revealWorkflowCardImage(4);
+        this.tasks.completeTask('wf-card-4', 'WORKFLOW');
+      }
+    };
 
-    // Parallel pair 2: Cards 3 & 4
-    await Promise.all([
-      buildCard(cor, boxes.workflowCard3, '<card.analytics-dash>', 3, 'wf-card-3'),
-      buildCard(layout, boxes.workflowCard4, '<card.ecommerce-ai>', 4, 'wf-card-4')
-    ]);
+    await Promise.all([cloneCard3(), cloneCard4()]);
+
+    // Edit/type Card 3 and Card 4 texts word-by-word
+    if (texto) {
+      this.movement.leaveOrbit(texto);
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-3'), texto, { wordDelay: 36 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-3'), texto, { wordDelay: 25 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-4'), texto, { wordDelay: 36 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-4'), texto, { wordDelay: 25 });
+      this.movement.returnToOrbit(texto);
+    } else {
+      document.querySelectorAll('#card-tec-title-3 .type-word, #card-tec-desc-3 .type-word, #card-tec-title-4 .type-word, #card-tec-desc-4 .type-word').forEach(w => w.style.opacity = '1');
+    }
   }
 
   /**
    * SECTION 3: SERVICES (#servicos)
-   * Wireframe header -> types title/subtitle -> wireframe service cards -> reveals cards
+   * 1. Frame header & type title/subtitle word-by-word
+   * 2. Build Card 1 from scratch -> mount icon -> type texts
+   * 3. Alt+Drag clone Card 1 -> Card 2 -> mount icon -> edit/type texts
+   * 4. Alt+Drag clone Card 2 -> Card 3 -> mount icon -> edit/type texts
    */
   async buildServicesSection() {
     this.engine.updateContainerHeight();
@@ -454,8 +549,8 @@ export class AgentCoordinator {
     // 2. Type Services Title and Subtitle word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('services-title'), texto, { wordDelay: 50 });
-      await this.heroAnimation.typeTextWords(document.getElementById('services-subtitle'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('services-title'), texto, { wordDelay: 45 });
+      await this.heroAnimation.typeTextWords(document.getElementById('services-subtitle'), texto, { wordDelay: 32 });
       this.tasks.completeTask('srv-header', 'SERVICES');
       this.movement.returnToOrbit(texto);
     } else {
@@ -463,30 +558,94 @@ export class AgentCoordinator {
       this.tasks.completeTask('srv-header', 'SERVICES');
     }
 
-    // 3. Construct 3 service cards in parallel (Cards remain hidden until wireframe finishes!)
-    const buildService = async (agent, boxFn, tag, idx, taskId) => {
-      if (agent) {
-        await this.boxDrawer.drawBox({
-          agent: agent,
-          box: boxFn(),
-          tagName: tag,
-          duration: 0.65,
-          onMaterialize: () => {
-            this.heroAnimation.revealServiceCard(idx);
-            this.tasks.completeTask(taskId, 'SERVICES');
-          }
-        });
-      } else {
-        this.heroAnimation.revealServiceCard(idx);
-        this.tasks.completeTask(taskId, 'SERVICES');
-      }
-    };
+    // 3. Card 1: Build first card from scratch
+    if (layout) {
+      await this.boxDrawer.drawBox({
+        agent: layout,
+        box: boxes.serviceCard1(),
+        tagName: '<card.ai-ml [Master]>',
+        duration: 0.65,
+        onMaterialize: () => {
+          this.heroAnimation.revealServiceCard(1);
+          this.heroAnimation.revealServiceIcon(1);
+          this.tasks.completeTask('srv-card-1', 'SERVICES');
+        }
+      });
+    } else {
+      this.heroAnimation.revealServiceCard(1);
+      this.heroAnimation.revealServiceIcon(1);
+      this.tasks.completeTask('srv-card-1', 'SERVICES');
+    }
 
-    await Promise.all([
-      buildService(layout, boxes.serviceCard1, '<card.ai-ml>', 1, 'srv-card-1'),
-      buildService(ui, boxes.serviceCard2, '<card.n8n-auto>', 2, 'srv-card-2'),
-      buildService(cor, boxes.serviceCard3, '<card.fullstack>', 3, 'srv-card-3')
-    ]);
+    // Type Card 1 title & description word-by-word
+    if (texto) {
+      this.movement.leaveOrbit(texto);
+      await this.heroAnimation.typeTextWords(document.getElementById('service-title-1'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-1'), texto, { wordDelay: 26 });
+      this.movement.returnToOrbit(texto);
+    } else {
+      document.querySelectorAll('#service-title-1 .type-word, #service-desc-1 .type-word').forEach(w => w.style.opacity = '1');
+    }
+
+    // 4. Card 2: Clone from Card 1 (Alt+Drag)
+    if (ui) {
+      await this.boxDrawer.cloneAndDrag({
+        agent: ui,
+        fromBox: boxes.serviceCard1(),
+        toBox: boxes.serviceCard2(),
+        tagName: '<card.n8n-auto [Clone]>',
+        duration: 0.65,
+        onLand: () => {
+          this.heroAnimation.revealServiceCard(2);
+          this.heroAnimation.revealServiceIcon(2);
+          this.tasks.completeTask('srv-card-2', 'SERVICES');
+        }
+      });
+    } else {
+      this.heroAnimation.revealServiceCard(2);
+      this.heroAnimation.revealServiceIcon(2);
+      this.tasks.completeTask('srv-card-2', 'SERVICES');
+    }
+
+    // Edit/type Card 2 title & description word-by-word
+    if (texto) {
+      this.movement.leaveOrbit(texto);
+      await this.heroAnimation.typeTextWords(document.getElementById('service-title-2'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-2'), texto, { wordDelay: 26 });
+      this.movement.returnToOrbit(texto);
+    } else {
+      document.querySelectorAll('#service-title-2 .type-word, #service-desc-2 .type-word').forEach(w => w.style.opacity = '1');
+    }
+
+    // 5. Card 3: Clone from Card 2 (Alt+Drag)
+    if (cor) {
+      await this.boxDrawer.cloneAndDrag({
+        agent: cor,
+        fromBox: boxes.serviceCard2(),
+        toBox: boxes.serviceCard3(),
+        tagName: '<card.fullstack [Clone]>',
+        duration: 0.65,
+        onLand: () => {
+          this.heroAnimation.revealServiceCard(3);
+          this.heroAnimation.revealServiceIcon(3);
+          this.tasks.completeTask('srv-card-3', 'SERVICES');
+        }
+      });
+    } else {
+      this.heroAnimation.revealServiceCard(3);
+      this.heroAnimation.revealServiceIcon(3);
+      this.tasks.completeTask('srv-card-3', 'SERVICES');
+    }
+
+    // Edit/type Card 3 title & description word-by-word
+    if (texto) {
+      this.movement.leaveOrbit(texto);
+      await this.heroAnimation.typeTextWords(document.getElementById('service-title-3'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-3'), texto, { wordDelay: 26 });
+      this.movement.returnToOrbit(texto);
+    } else {
+      document.querySelectorAll('#service-title-3 .type-word, #service-desc-3 .type-word').forEach(w => w.style.opacity = '1');
+    }
   }
 
   /**
@@ -526,7 +685,7 @@ export class AgentCoordinator {
         duration: 0.55,
         returnToOrbit: false
       });
-      await this.heroAnimation.typeTextWords(document.getElementById('cta-title'), texto, { wordDelay: 50 });
+      await this.heroAnimation.typeTextWords(document.getElementById('cta-title'), texto, { wordDelay: 45 });
 
       // Wireframe subtitle
       await this.boxDrawer.drawBox({
@@ -536,7 +695,7 @@ export class AgentCoordinator {
         duration: 0.6,
         returnToOrbit: false
       });
-      await this.heroAnimation.typeTextWords(document.getElementById('cta-subtitle'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('cta-subtitle'), texto, { wordDelay: 32 });
 
       this.tasks.completeTask('cta-copy', 'CTA');
       this.movement.returnToOrbit(texto);

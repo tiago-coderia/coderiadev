@@ -1,8 +1,7 @@
 /**
- * Coderia.dev — Agent Wireframe Box Drawer
- * Creates and animates real-time bounding boxes drawn by agent cursors.
- * Coordinates smooth departure from the mouse orbit to the element anchor (zero snapping),
- * followed by physical box drawing, component materialization, and smooth return back into orbit.
+ * Coderia.dev — Agent Wireframe Box Drawer & Component Clone Engine
+ * Creates real-time bounding boxes drawn by agent cursors, and coordinates
+ * interactive Figma-style [Alt+Drag] duplication of components across grid slots.
  */
 
 export class AgentBoxDrawer {
@@ -28,8 +27,8 @@ export class AgentBoxDrawer {
   }
 
   /**
-   * Coordinated animation:
-   * 1. Agent smoothly leaves mouse orbit and flies to element top-left anchor (no teleporting).
+   * Coordinated box drawing:
+   * 1. Agent smoothly leaves mouse orbit and flies to element top-left anchor.
    * 2. Agent drags down-right, physically drawing out the bounding box frame in real time.
    * 3. Target content materializes inside the frame and the wireframe dissolves.
    * 4. Agent smoothly returns back into the mouse orbit.
@@ -41,7 +40,6 @@ export class AgentBoxDrawer {
       return null;
     }
 
-    // 1. Release agent from mouse orbit smoothly
     if (this.movement) {
       this.movement.leaveOrbit(agent);
     }
@@ -56,7 +54,6 @@ export class AgentBoxDrawer {
     agent.setIdle(false);
     agent.setAction('APPROACHING', 'is-selecting');
 
-    // 2. Smooth flight from current orbit coordinates to element anchor (NO TELEPORTING)
     const dist = Math.hypot(startX - agent.x, startY - agent.y);
     const travelDuration = Math.min(0.52, Math.max(0.24, dist / 2200)) / (agent.profile.speed || 1);
 
@@ -80,7 +77,6 @@ export class AgentBoxDrawer {
       });
     });
 
-    // 3. Create the wireframe bounding box element at element coordinates
     const boxEl = document.createElement('div');
     boxEl.className = 'wireframe-box';
     if (startY < 30) {
@@ -93,7 +89,6 @@ export class AgentBoxDrawer {
     boxEl.style.borderColor = color;
     boxEl.style.backgroundColor = this.hexToRgba(color, 0.08);
 
-    // 4 Corner handles
     ['tl', 'tr', 'bl', 'br'].forEach(corner => {
       const handle = document.createElement('span');
       handle.className = `wireframe-handle handle-${corner}`;
@@ -101,7 +96,6 @@ export class AgentBoxDrawer {
       boxEl.appendChild(handle);
     });
 
-    // Dimension & Tag metadata badge
     const tagEl = document.createElement('div');
     tagEl.className = 'wireframe-tag';
     tagEl.style.borderColor = color;
@@ -116,7 +110,6 @@ export class AgentBoxDrawer {
     this.container.appendChild(boxEl);
     this.activeBoxes.push(boxEl);
 
-    // 4. Animate cursor drag from top-left to bottom-right
     agent.setAction('DRAWING BOX', 'is-selecting');
 
     await new Promise(resolve => {
@@ -176,13 +169,141 @@ export class AgentBoxDrawer {
       });
     });
 
-    // 5. Smooth return back into mouse orbit
     if (returnToOrbit && this.movement) {
       await new Promise(r => setTimeout(r, 160));
       this.movement.returnToOrbit(agent);
     }
 
     return boxEl;
+  }
+
+  /**
+   * Interactive Figma-style Duplicate (Alt+Drag):
+   * 1. Agent approaches fromBox to select source component.
+   * 2. Creates a glowing clone ghost box matching component dimensions.
+   * 3. Drags the clone box AND cursor together across to toBox.
+   * 4. Snaps into place at toBox, invokes onLand callback to materialize target, and dissolves clone.
+   */
+  async cloneAndDrag({ agent, fromBox, toBox, tagName = '<clone.duplicate [Alt+Drag]>', duration = 0.7, onLand = null, returnToOrbit = true }) {
+    const gsap = window.gsap;
+    if (!this.container || !agent || !fromBox || !toBox) {
+      if (onLand) onLand();
+      return null;
+    }
+
+    if (this.movement) {
+      this.movement.leaveOrbit(agent);
+    }
+
+    const color = agent.profile.color;
+    agent.setVisible(true);
+    agent.setIdle(false);
+    agent.setAction('SELECTING', 'is-selecting');
+
+    const startX = fromBox.left;
+    const startY = fromBox.top;
+    const endX = toBox.left;
+    const endY = toBox.top;
+
+    // 1. Move to source box top-left
+    const distToSource = Math.hypot(startX - agent.x, startY - agent.y);
+    const approachDuration = Math.min(0.45, Math.max(0.2, distToSource / 2400)) / (agent.profile.speed || 1);
+
+    await new Promise(res => {
+      if (!gsap) {
+        agent.setPosition(startX, startY);
+        res();
+        return;
+      }
+      gsap.to(agent, {
+        x: startX,
+        y: startY,
+        duration: approachDuration,
+        ease: 'power2.out',
+        onUpdate: () => agent.setPosition(agent.x, agent.y),
+        onComplete: res
+      });
+    });
+
+    // 2. Create the clone ghost frame
+    const cloneBox = document.createElement('div');
+    cloneBox.className = 'wireframe-clone-box';
+    cloneBox.style.left = `${startX}px`;
+    cloneBox.style.top = `${startY}px`;
+    cloneBox.style.width = `${fromBox.width}px`;
+    cloneBox.style.height = `${fromBox.height}px`;
+    cloneBox.style.borderColor = color;
+    cloneBox.style.backgroundColor = this.hexToRgba(color, 0.12);
+
+    ['tl', 'tr', 'bl', 'br'].forEach(corner => {
+      const handle = document.createElement('span');
+      handle.className = `wireframe-handle handle-${corner}`;
+      handle.style.borderColor = color;
+      cloneBox.appendChild(handle);
+    });
+
+    const tagEl = document.createElement('div');
+    tagEl.className = 'wireframe-tag';
+    tagEl.style.borderColor = color;
+    tagEl.innerHTML = `
+      <span class="wireframe-tag-name" style="color: ${color}">${tagName}</span>
+      <span class="wireframe-tag-dim">${Math.round(toBox.width)} × ${Math.round(toBox.height)}</span>
+    `;
+    cloneBox.appendChild(tagEl);
+
+    this.container.appendChild(cloneBox);
+    this.activeBoxes.push(cloneBox);
+
+    // 3. Drag clone to target slot
+    agent.setAction('CLONING [ALT+DRAG]', 'is-typing');
+
+    await new Promise(resolve => {
+      if (!gsap) {
+        cloneBox.style.left = `${endX}px`;
+        cloneBox.style.top = `${endY}px`;
+        agent.setPosition(endX, endY);
+        if (onLand) onLand();
+        cloneBox.classList.add('is-complete');
+        setTimeout(() => cloneBox.remove(), 300);
+        resolve();
+        return;
+      }
+
+      const dragObj = { x: startX, y: startY };
+      gsap.to(dragObj, {
+        x: endX,
+        y: endY,
+        duration: duration / (agent.profile.speed || 1),
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          cloneBox.style.left = `${dragObj.x}px`;
+          cloneBox.style.top = `${dragObj.y}px`;
+          agent.setPosition(dragObj.x, dragObj.y);
+        },
+        onComplete: () => {
+          cloneBox.classList.add('is-snapping');
+          agent.setAction('DROPPED', 'is-selecting');
+
+          if (onLand) onLand();
+
+          setTimeout(() => {
+            cloneBox.classList.add('is-complete');
+            setTimeout(() => {
+              if (cloneBox.parentNode) cloneBox.parentNode.removeChild(cloneBox);
+              const idx = this.activeBoxes.indexOf(cloneBox);
+              if (idx !== -1) this.activeBoxes.splice(idx, 1);
+            }, 350);
+          }, 150);
+
+          resolve();
+        }
+      });
+    });
+
+    if (returnToOrbit && this.movement) {
+      await new Promise(r => setTimeout(r, 160));
+      this.movement.returnToOrbit(agent);
+    }
   }
 
   clearAll() {
