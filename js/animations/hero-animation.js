@@ -69,10 +69,16 @@ export class HeroAnimation {
   async typeHeadlineCharacters(element, agent = null, options = {}) {
     if (!element) return;
     const chars = this.prepareHeadlineForTyping(element);
-    const charDelay = options.charDelay || 36; // 36ms per letter (~1.4s total)
+    const charDelay = options.charDelay || 36; // 36ms per letter
 
     element.style.opacity = '1';
     element.style.visibility = 'visible';
+
+    const parentHeadline = document.getElementById('hero-headline');
+    if (parentHeadline) {
+      parentHeadline.style.opacity = '1';
+      parentHeadline.style.visibility = 'visible';
+    }
 
     if (agent) {
       agent.setAction('WRITING...', 'is-typing');
@@ -82,7 +88,7 @@ export class HeroAnimation {
       const charSpan = chars[i];
       charSpan.style.opacity = '1';
 
-      if (agent && i % 2 === 0) {
+      if (agent && (i % 2 === 0 || i === chars.length - 1)) {
         const rect = charSpan.getBoundingClientRect();
         const scrollX = window.scrollX || window.pageXOffset || 0;
         const scrollY = window.scrollY || window.pageYOffset || 0;
@@ -222,14 +228,22 @@ export class HeroAnimation {
     
     // Hero initial states
     gsap.set('#hero-symbol', { opacity: 0, scale: 0.7, y: 15 });
-    gsap.set('#hero-headline', { opacity: 0 });
+    gsap.set('#hero-headline', { opacity: 1 }); // Container visible so elements have layout, but child chars are opacity: 0
     gsap.set('#hero-description', { opacity: 0 });
     gsap.set('#hero-primary-cta', { opacity: 0, y: 15, scale: 0.95 });
     gsap.set('#hero-showcase-frame', { opacity: 0, y: 30, scale: 0.96 });
 
-    // Prepare Hero headline characters and description words
+    // Prepare Hero headline parts (main & highlight)
+    const headlineMain = document.getElementById('headline-main');
+    if (headlineMain) this.prepareHeadlineForTyping(headlineMain);
+    const headlineHighlight = document.getElementById('headline-highlight');
+    if (headlineHighlight) {
+      headlineHighlight.classList.remove('has-glow');
+      this.prepareHeadlineForTyping(headlineHighlight);
+    }
     const headline = document.getElementById('hero-headline');
-    if (headline) this.prepareHeadlineForTyping(headline);
+    if (headline && !headlineMain && !headlineHighlight) this.prepareHeadlineForTyping(headline);
+
     const desc = document.getElementById('hero-description');
     if (desc) this.prepareTextForTyping(desc);
 
@@ -306,13 +320,32 @@ export class HeroAnimation {
   }
 
   glowHeadlineHighlight() {
+    return this.applyHeadlineGlow();
+  }
+
+  applyHeadlineGlow() {
     const gsap = window.gsap;
     const highlight = document.getElementById('headline-highlight');
-    if (!gsap || !highlight) return;
-    gsap.fromTo(highlight, 
-      { filter: 'brightness(1) drop-shadow(0 0 12px rgba(56, 189, 248, 0.4))' },
-      { filter: 'brightness(1.5) drop-shadow(0 0 24px rgba(56, 189, 248, 0.8))', duration: 0.5, yoyo: true, repeat: 1, clearProps: 'filter' }
-    );
+    if (!highlight) return Promise.resolve();
+
+    highlight.classList.add('has-glow');
+
+    if (gsap) {
+      return new Promise(resolve => {
+        gsap.fromTo(highlight, 
+          { filter: 'brightness(1) drop-shadow(0 0 4px rgba(56, 189, 248, 0.3))' },
+          { 
+            filter: 'brightness(1.55) drop-shadow(0 0 24px rgba(56, 189, 248, 0.85))', 
+            duration: 0.5, 
+            yoyo: true, 
+            repeat: 1, 
+            clearProps: 'filter',
+            onComplete: resolve
+          }
+        );
+      });
+    }
+    return Promise.resolve();
   }
 
   revealPrimaryCta() {
@@ -397,6 +430,8 @@ export class HeroAnimation {
     if (gsap) {
       gsap.set(selectors.join(','), { opacity: 1, y: 0, scale: 1, clearProps: 'transform' });
       document.querySelectorAll('.type-word, .type-char').forEach(w => w.style.opacity = '1');
+      const highlight = document.getElementById('headline-highlight');
+      if (highlight) highlight.classList.add('has-glow');
     }
   }
 }

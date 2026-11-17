@@ -168,13 +168,13 @@ export class AgentCoordinator {
       this.tasks.completeTask('hero-symbol', 'HERO');
     }
 
-    // 3. Headline & Copy (Wireframe first -> then typed word-by-word!)
+    // 3. Headline Part 1: "Construindo Aplicações" (Wireframe first -> then typed letter-by-letter)
     if (grid) {
       await this.boxDrawer.drawBox({
         agent: grid,
-        box: boxes.headline(),
-        tagName: '<h1.hero-headline>',
-        duration: 0.8,
+        box: boxes.headlineMain ? boxes.headlineMain() : boxes.headline(),
+        tagName: '<h1.headline-main>',
+        duration: 0.7,
         onMaterialize: () => {
           this.tasks.completeTask('hero-headline', 'HERO');
         }
@@ -183,28 +183,48 @@ export class AgentCoordinator {
       this.tasks.completeTask('hero-headline', 'HERO');
     }
 
-    // Type headline letter-by-letter with authentic typewriter writing effect!
-    if (texto) {
+    // Type "Construindo Aplicações" letter-by-letter with authentic typewriter effect
+    const headlineMainEl = document.getElementById('headline-main');
+    if (texto && headlineMainEl) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeHeadlineCharacters(document.getElementById('hero-headline'), texto, { charDelay: 36 });
-      this.movement.returnToOrbit(texto);
-    } else {
-      document.querySelectorAll('#hero-headline .type-char').forEach(w => w.style.opacity = '1');
+      await this.heroAnimation.typeHeadlineCharacters(headlineMainEl, texto, { charDelay: 34 });
+    } else if (headlineMainEl) {
+      headlineMainEl.querySelectorAll('.type-char').forEach(w => w.style.opacity = '1');
     }
 
-    // Highlight gradient glow
+    // Headline Part 2: Selection box for "Web Inteligentes" BEFORE typing ("antes passado a caixa de seleção")
+    if (grid) {
+      await this.boxDrawer.drawBox({
+        agent: grid,
+        box: boxes.headlineHighlight(),
+        tagName: '<span.highlight>',
+        duration: 0.58
+      });
+    }
+
+    // Type "Web Inteligentes" letter-by-letter ("e precisa ser digitado", "ele precisa ser escrito por completo")
+    const headlineHighlightEl = document.getElementById('headline-highlight');
+    if (texto && headlineHighlightEl) {
+      await this.heroAnimation.typeHeadlineCharacters(headlineHighlightEl, texto, { charDelay: 36 });
+      this.movement.returnToOrbit(texto);
+    } else if (headlineHighlightEl) {
+      headlineHighlightEl.querySelectorAll('.type-char').forEach(w => w.style.opacity = '1');
+    }
+
+    // Apply glow effect at the end ("e por fim o efeito de glow")
     if (cor) {
       await this.boxDrawer.drawBox({
         agent: cor,
         box: boxes.headlineHighlight(),
-        tagName: '<span.highlight>',
-        duration: 0.55,
+        tagName: '<span.glow>',
+        duration: 0.5,
         onMaterialize: () => {
-          this.heroAnimation.glowHeadlineHighlight();
+          this.heroAnimation.applyHeadlineGlow();
           this.tasks.completeTask('hero-gradient', 'HERO');
         }
       });
     } else {
+      await this.heroAnimation.applyHeadlineGlow();
       this.tasks.completeTask('hero-gradient', 'HERO');
     }
 

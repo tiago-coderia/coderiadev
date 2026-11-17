@@ -9,6 +9,7 @@ export class Hero {
     this.section = document.getElementById('hero');
     this.symbol = document.getElementById('hero-symbol');
     this.headline = document.getElementById('hero-headline');
+    this.headlineMain = document.getElementById('headline-main');
     this.headlineHighlight = document.getElementById('headline-highlight');
     this.description = document.getElementById('hero-description');
     this.actions = document.getElementById('hero-actions');
@@ -77,6 +78,7 @@ export class Hero {
       // Hero
       heroSymbol: () => this.getElementBox(this.symbol, 6),
       headline: () => this.getElementBox(this.headline, 8),
+      headlineMain: () => this.getElementBox(this.headlineMain || this.headline, 6),
       headlineHighlight: () => this.getElementBox(this.headlineHighlight, 4),
       description: () => this.getElementBox(this.description, 6),
       primaryCta: () => this.getElementBox(this.primaryCta, 4),

@@ -38,3 +38,10 @@
 - [x] T06-02: Synchronize live cursor position tracking with the writing agent (`TEXTO`) across each typed character
 - [x] T06-03: Implement `scatterInFirstSection` on 100% build completion: auto-scroll to `#hero` and distribute cursors across the first section around headline, symbol, CTA, and showcase frame
 - [x] T06-04: Connect replay restart button to regroup cursors at hero center and replay full sequence cleanly
+
+## Task Group 7: Complete Headline Typing Sequence & Deferred Glow Effect
+- [x] T07-01: Isolate `#headline-main` ("Construindo Aplicações") and `#headline-highlight` ("Web Inteligentes") with individual wireframe bounding boxes
+- [x] T07-02: Type "Construindo Aplicações" letter-by-letter with cursor tracking
+- [x] T07-03: Draw selection box on `boxes.headlineHighlight()` before typing "Web Inteligentes"
+- [x] T07-04: Type "Web Inteligentes" letter-by-letter as clean white text (no instant appearance, no pre-rendered glow/gradient/underline)
+- [x] T07-05: Apply glow effect at the end via `agent: cor`: activate `.has-glow`, gradient fill, text-shadow bloom, and expanding underline

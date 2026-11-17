@@ -73,6 +73,10 @@
   display: block;
 }
 
+.headline-main {
+  display: inline-block;
+}
+
 .type-char {
   display: inline;
   will-change: opacity;
@@ -80,21 +84,34 @@
 
 .headline-highlight {
   display: inline-block;
-  color: #38bdf8;
+  color: #ffffff;
   position: relative;
+  transition: text-shadow 0.4s ease;
 }
 
-.headline-highlight,
-.headline-highlight .type-char,
-.headline-highlight .type-word {
+/* While typing: pure white text, clean contrast, no glow or gradient yet */
+.headline-highlight .type-char {
+  display: inline;
+  color: #ffffff;
+  background: none;
+  -webkit-text-fill-color: initial;
+  text-shadow: none;
+}
+
+/* Glow Effect: Activated at the end by the COR agent */
+.headline-highlight.has-glow {
+  text-shadow: 0 0 24px rgba(56, 189, 248, 0.5), 0 0 48px rgba(196, 181, 253, 0.35);
+}
+
+.headline-highlight.has-glow .type-char {
   background: linear-gradient(135deg, #ffffff 15%, #c4b5fd 60%, #38bdf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   color: #38bdf8;
   display: inline;
-  text-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
 }
 
+/* Glowing cyan underline - hidden until the glow effect is triggered */
 .headline-highlight::after {
   content: '';
   position: absolute;
@@ -102,8 +119,16 @@
   bottom: 4px;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.9), transparent);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.headline-highlight.has-glow::after {
   opacity: 0.85;
+  transform: scaleX(1);
 }
 
 /* Supporting Description */
