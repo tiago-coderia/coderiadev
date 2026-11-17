@@ -67,6 +67,12 @@ body {
   pointer-events: none !important;
 }
 
+/* Word-by-Word Typing Tokens */
+.type-word {
+  display: inline-block;
+  will-change: opacity, transform;
+}
+
 /* Base Buttons */
 .btn {
   display: inline-flex;

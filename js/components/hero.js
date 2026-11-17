@@ -84,6 +84,8 @@ export class Hero {
 
       // Workflow (#potencialize)
       workflowHeader: () => this.getElementBox(document.getElementById('workflow-header'), 6),
+      workflowTitle: () => this.getElementBox(document.getElementById('workflow-title'), 6),
+      workflowSubtitle: () => this.getElementBox(document.getElementById('workflow-subtitle'), 6),
       workflowCard1: () => this.getElementBox(document.getElementById('card-tec-1'), 6),
       workflowCard2: () => this.getElementBox(document.getElementById('card-tec-2'), 6),
       workflowCard3: () => this.getElementBox(document.getElementById('card-tec-3'), 6),
@@ -91,12 +93,16 @@ export class Hero {
 
       // Services (#servicos)
       servicesHeader: () => this.getElementBox(document.getElementById('services-header'), 6),
+      servicesTitle: () => this.getElementBox(document.getElementById('services-title'), 6),
+      servicesSubtitle: () => this.getElementBox(document.getElementById('services-subtitle'), 6),
       serviceCard1: () => this.getElementBox(document.getElementById('service-card-1'), 6),
       serviceCard2: () => this.getElementBox(document.getElementById('service-card-2'), 6),
       serviceCard3: () => this.getElementBox(document.getElementById('service-card-3'), 6),
 
       // CTA (#contato)
       ctaContainer: () => this.getElementBox(document.getElementById('cta-container'), 8),
+      ctaTitle: () => this.getElementBox(document.getElementById('cta-title'), 6),
+      ctaSubtitle: () => this.getElementBox(document.getElementById('cta-subtitle'), 6),
       ctaContactBtn: () => this.getElementBox(document.getElementById('cta-contact-btn'), 4),
 
       // Footer
