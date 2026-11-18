@@ -53,16 +53,20 @@ export class Hero {
       };
     }
     const rect = element.getBoundingClientRect();
-    const left = Math.round(rect.left + scrollX - padding);
-    const top = Math.round(rect.top + scrollY - padding);
-    const width = Math.round(rect.width + padding * 2);
-    const height = Math.round(rect.height + padding * 2);
+    const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    const rawLeft = Math.round(rect.left + scrollX - padding);
+    const rawRight = Math.round(rect.right + scrollX + padding);
+    const left = Math.max(2, rawLeft);
+    const right = Math.min(viewportWidth - 2, Math.max(left + 12, rawRight));
+    const top = Math.max(2, Math.round(rect.top + scrollY - padding));
+    const width = Math.max(12, right - left);
+    const height = Math.max(12, Math.round(rect.height + padding * 2));
     return {
       left,
       top,
       width,
       height,
-      right: left + width,
+      right,
       bottom: top + height
     };
   }

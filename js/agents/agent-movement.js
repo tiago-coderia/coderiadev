@@ -16,31 +16,61 @@ export class AgentMovement {
 
     // Viewport client coordinates of mouse (default to center)
     this.clientMouseX = window.innerWidth * 0.5;
-    this.clientMouseY = window.innerHeight * 0.45;
+    this.clientMouseY = window.innerHeight * 0.42;
+    this.hasMouseMoved = false;
 
     this.initMouseListener();
   }
 
   initMouseListener() {
     const updateMouse = (e) => {
+      if (!Number.isFinite(e.clientX) || !Number.isFinite(e.clientY)) return;
       this.clientMouseX = e.clientX;
       this.clientMouseY = e.clientY;
+      this.hasMouseMoved = true;
     };
 
     window.addEventListener('mousemove', updateMouse, { passive: true });
-    window.addEventListener('pointermove', updateMouse, { passive: true });
+    window.addEventListener('pointermove', (e) => {
+      // Only track fine mouse pointers so touch scrolling never drags the orbit off to screen corners
+      if (e.pointerType === 'mouse') {
+        updateMouse(e);
+      }
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      if (!this.hasMouseMoved || window.innerWidth <= 768) {
+        this.clientMouseX = window.innerWidth * 0.5;
+        this.clientMouseY = window.innerHeight * 0.42;
+      }
+    }, { passive: true });
   }
 
   /**
-   * Samples live document coordinates of the mouse on each animation frame
-   * (guarantees seamless tracking even when scrolling without moving the mouse)
+   * Samples live document coordinates of the mouse on each animation frame,
+   * clamped inside safe viewport margins so orbiting agents never vanish off-screen
+   * (guarantees seamless tracking on both desktop and mobile during scroll/resize)
    */
   getLiveMousePosition() {
     const scrollX = window.scrollX || window.pageXOffset || 0;
     const scrollY = window.scrollY || window.pageYOffset || 0;
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    const vh = window.innerHeight;
+    const isMobile = vw <= 768;
+
+    const baseX = isMobile && !this.hasMouseMoved ? vw * 0.5 : this.clientMouseX;
+    const baseY = isMobile && !this.hasMouseMoved ? vh * 0.42 : this.clientMouseY;
+
+    const marginX = Math.min(this.orbitRadius + 20, vw * 0.25);
+    const marginTop = Math.min(this.orbitRadius + 56, vh * 0.25);
+    const marginBottom = Math.min(this.orbitRadius + 90, vh * 0.3);
+
+    const clampedX = Math.min(Math.max(baseX, marginX), Math.max(marginX, vw - marginX));
+    const clampedY = Math.min(Math.max(baseY, marginTop), Math.max(marginTop, vh - marginBottom));
+
     return {
-      x: this.clientMouseX + scrollX,
-      y: this.clientMouseY + scrollY
+      x: clampedX + scrollX,
+      y: clampedY + scrollY
     };
   }
 
@@ -106,6 +136,7 @@ export class AgentMovement {
       const count = this.orbitingAgents.size;
       if (count > 0) {
         const { x: liveMouseX, y: liveMouseY } = this.getLiveMousePosition();
+        const radius = window.innerWidth <= 768 ? Math.min(this.orbitRadius, 36) : this.orbitRadius;
         this.orbitAngle += 0.007;
 
         let i = 0;
@@ -117,8 +148,8 @@ export class AgentMovement {
           }
 
           const baseAngle = (i / count) * Math.PI * 2 + this.orbitAngle;
-          const targetX = liveMouseX + Math.cos(baseAngle) * this.orbitRadius - 10;
-          const targetY = liveMouseY + Math.sin(baseAngle) * this.orbitRadius - 10;
+          const targetX = liveMouseX + Math.cos(baseAngle) * radius - 10;
+          const targetY = liveMouseY + Math.sin(baseAngle) * radius - 10;
 
           // Smooth spring interpolation towards mouse orbit
           agent.x += (targetX - agent.x) * 0.22;
@@ -149,6 +180,9 @@ export class AgentMovement {
     if (!agent) return;
     this.orbitingAgents.delete(agent);
     this.stopMovement(agent.profile.id);
+    if (window.gsap) {
+      window.gsap.killTweensOf(agent);
+    }
     agent.setIdle(false);
 
     // Smoothly restore arrow pointer rotation to neutral
@@ -168,9 +202,12 @@ export class AgentMovement {
    * Smoothly returns an agent from an element back into the mouse orbit
    */
   returnToOrbit(agent, duration = 0.48) {
-    if (!agent) return;
+    if (!agent || !this.isOrbiting) return;
     const gsap = window.gsap;
     this.stopMovement(agent.profile.id);
+    if (gsap) {
+      gsap.killTweensOf(agent);
+    }
 
     // Re-add to orbit set so other cursors accommodate its arrival
     this.orbitingAgents.add(agent);
@@ -191,6 +228,7 @@ export class AgentMovement {
       duration: duration / (agent.profile.speed || 1),
       ease: 'power2.inOut',
       onUpdate: () => {
+        if (!this.isOrbiting) return;
         const { x: curMouseX, y: curMouseY } = this.getLiveMousePosition();
         agent.x = startX + (curMouseX - startX) * progress.p;
         agent.y = startY + (curMouseY - startY) * progress.p;
@@ -198,7 +236,9 @@ export class AgentMovement {
       },
       onComplete: () => {
         this.activeTweens.delete(agent.profile.id);
-        agent.setIdle(true);
+        if (this.isOrbiting && this.orbitingAgents.has(agent)) {
+          agent.setIdle(true);
+        }
       }
     });
 
@@ -209,6 +249,8 @@ export class AgentMovement {
     if (agents && agents.length > 0) {
       agents.forEach(agent => {
         this.orbitingAgents.delete(agent);
+        this.stopMovement(agent.profile.id);
+        if (window.gsap) window.gsap.killTweensOf(agent);
         agent.setIdle(false);
         agent.resetRotation();
       });
@@ -216,7 +258,13 @@ export class AgentMovement {
     }
 
     this.isOrbiting = false;
+    this.orbitingAgents.forEach(agent => {
+      if (window.gsap) window.gsap.killTweensOf(agent);
+      agent.setIdle(false);
+      agent.resetRotation();
+    });
     this.orbitingAgents.clear();
+    this.stopAll();
     if (this.orbitRafId) {
       cancelAnimationFrame(this.orbitRafId);
       this.orbitRafId = null;

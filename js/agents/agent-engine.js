@@ -24,15 +24,8 @@ export class AgentEngine {
     if (!this.container) return;
     this.updateContainerHeight();
 
-    // Filter agents according to viewport (culls to essential agents on mobile)
-    const profiles = AGENT_PROFILES.filter(profile => {
-      if (this.isMobile) {
-        return profile.mobileActive;
-      }
-      return true;
-    });
-
-    profiles.forEach(profile => {
+    // All 7 core builder agents are active on both desktop and mobile
+    AGENT_PROFILES.forEach(profile => {
       const cursor = new AgentCursor(profile, this.container);
       this.agents.set(profile.id, cursor);
     });
@@ -61,24 +54,39 @@ export class AgentEngine {
     this.agents.forEach(agent => agent.setVisible(false));
   }
 
+  setLayerHidden(hidden) {
+    if (!this.container) return;
+    if (hidden) {
+      this.container.classList.add('is-hidden');
+    } else {
+      this.container.classList.remove('is-hidden');
+    }
+  }
+
   bindResize() {
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
+    const syncHeight = () => {
+      this.isMobile = window.innerWidth <= 768;
       this.updateContainerHeight();
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        const currentlyMobile = window.innerWidth <= 768;
-        if (currentlyMobile !== this.isMobile) {
-          this.isMobile = currentlyMobile;
-          // Re-initialize agents for new viewport mode
-          this.destroy();
-          this.initAgents();
-        }
-      }, 250);
-    }, { passive: true });
+    };
+
+    window.addEventListener('resize', syncHeight, { passive: true });
+    window.addEventListener('load', syncHeight, { passive: true });
+
+    // Keep agents-layer height in sync as fonts/images load or layout reflows
+    if (typeof ResizeObserver !== 'undefined' && document.body) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.updateContainerHeight();
+      });
+      this.resizeObserver.observe(document.body);
+    }
   }
 
   destroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    this.movement.stopMouseOrbit();
     this.movement.stopAll();
     if (this.boxDrawer) this.boxDrawer.clearAll();
     this.agents.forEach(agent => agent.destroy());

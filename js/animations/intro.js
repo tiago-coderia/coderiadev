@@ -6,7 +6,6 @@
 export class IntroAnimation {
   static start() {
     const gsap = window.gsap;
-    document.body.classList.remove('is-loading');
 
     if (gsap) {
       gsap.fromTo('.bg-grid-pattern', 

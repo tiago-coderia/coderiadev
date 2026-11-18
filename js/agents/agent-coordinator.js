@@ -10,7 +10,8 @@
  *    - Workflow: Build Card 1 -> Type text -> Clone to Card 2 -> Type text -> Clone 2 more -> Edit texts
  *    - Services: One card at a time -> Build Card 1 -> Mount icon -> Type text -> Clone to Card 2 -> Mount icon -> Type text -> Clone to Card 3 -> Mount icon -> Type text
  * 4. 100% completion scatter across screen margins (no mouse-following, non-intrusive)
- * 5. Full replay restart with smooth scroll to top and center reassembly
+ * 5. Skip animation option in the HUD bar (hides all agents and immediately reveals full site)
+ * 6. Full replay restart with smooth scroll to top and center reassembly
  */
 
 export class AgentCoordinator {
@@ -30,23 +31,35 @@ export class AgentCoordinator {
     this.shouldSwitchSection = false;
     this.agentsDeployed = false;
     this.isCompleted = false;
+    this.isSkipped = false;
+    this.runId = 0;
     this.observer = null;
+    this.scrollCheckFn = null;
 
     this.initRestartButton();
+    this.initSkipButton();
+  }
+
+  isAborted(runId) {
+    return this.isSkipped || runId !== this.runId;
   }
 
   async start() {
     if (this.isReducedMotion) {
-      this.skipToFinalState();
+      this.skipAnimation();
       return;
     }
+
+    const currentRunId = this.runId;
+    this.isSkipped = false;
+    this.engine.setLayerHidden(false);
 
     // 1. Attach strict In-View Scroll Observers immediately so ANY scroll is detected
     this.initScrollObservers();
 
     // 2. Identify which section is currently in focus (top of page = hero, bottom = footer)
     const currentFocus = this.getSectionInFocus();
-    await this.buildSection(currentFocus);
+    await this.buildSection(currentFocus, currentRunId);
   }
 
   delay(ms) {
@@ -59,43 +72,39 @@ export class AgentCoordinator {
 
   /**
    * Ensures the 7 builder agents emerge smoothly in the current viewport
+   * without GSAP transform/opacity conflicts on the cursor container
    */
   ensureAgentsDeployed() {
-    if (this.agentsDeployed) return;
+    if (this.agentsDeployed || this.isSkipped) return;
     this.agentsDeployed = true;
+
+    this.engine.setLayerHidden(false);
+    this.engine.updateContainerHeight();
 
     const activeAgents = this.engine.getActiveAgents();
     this.tasks.setAgentsCount(activeAgents.length);
-    const gsap = window.gsap;
 
     const scrollY = window.scrollY || window.pageYOffset || 0;
-    const centerY = scrollY + window.innerHeight * 0.45;
-    const centerX = window.innerWidth * 0.5;
+    const viewportW = document.documentElement.clientWidth || window.innerWidth;
+    const centerY = scrollY + window.innerHeight * 0.42;
+    const centerX = viewportW * 0.5;
+    const spreadScale = viewportW <= 768 ? 0.55 : 1;
 
     activeAgents.forEach((ag, idx) => {
-      ag.setVisible(true);
-      ag.setIdle(false);
-      ag.setPosition(centerX, centerY);
-      const el = ag.element;
-      if (!el || !gsap) return;
+      if (window.gsap) {
+        window.gsap.killTweensOf(ag);
+        if (ag.element) window.gsap.killTweensOf(ag.element);
+      }
 
       const angle = (idx / activeAgents.length) * Math.PI * 2;
-      const dist = 75 + (idx % 3) * 30;
+      const dist = (75 + (idx % 3) * 30) * spreadScale;
       const targetX = centerX + Math.cos(angle) * dist;
       const targetY = centerY + Math.sin(angle) * dist;
 
+      ag.setPosition(targetX, targetY);
+      ag.setIdle(false);
       ag.setAction('DEPLOYING', 'is-selecting');
-      gsap.fromTo(el,
-        { scale: 0, opacity: 0 },
-        { 
-          scale: 1, 
-          opacity: 1, 
-          duration: 0.65, 
-          delay: idx * 0.03, 
-          ease: 'back.out(2.0)',
-          onStart: () => ag.setPosition(targetX, targetY)
-        }
-      );
+      ag.setVisible(true);
     });
 
     this.enterIdleMouseOrbit();
@@ -149,8 +158,8 @@ export class AgentCoordinator {
   /**
    * Builds the specified section, or fast-forwards if the user scrolls to another focus
    */
-  async buildSection(sectionId) {
-    if (this.builtSections.has(sectionId) || this.isBuildingSection) return;
+  async buildSection(sectionId, runId = this.runId) {
+    if (this.isAborted(runId) || this.builtSections.has(sectionId) || this.isBuildingSection) return;
 
     this.ensureAgentsDeployed();
     this.isBuildingSection = true;
@@ -160,34 +169,46 @@ export class AgentCoordinator {
     try {
       switch (sectionId) {
         case 'hero':
-          await this.buildHeroSection();
+          await this.buildHeroSection(runId);
           break;
         case 'potencialize':
-          await this.buildWorkflowSection();
+          await this.buildWorkflowSection(runId);
           break;
         case 'servicos':
-          await this.buildServicesSection();
+          await this.buildServicesSection(runId);
           break;
         case 'contato':
-          await this.buildCtaSection();
+          await this.buildCtaSection(runId);
           break;
         case 'site-footer':
-          await this.buildFooterSection();
+          await this.buildFooterSection(runId);
           break;
       }
-      this.builtSections.add(sectionId);
+      if (!this.isAborted(runId)) {
+        this.builtSections.add(sectionId);
+      }
     } catch (err) {
       console.warn(`Error building section ${sectionId}:`, err);
-      this.quickCompleteSection(sectionId);
+      if (!this.isAborted(runId)) {
+        this.quickCompleteSection(sectionId);
+      }
     } finally {
+      if (this.isAborted(runId)) {
+        this.isBuildingSection = false;
+        this.activeSection = null;
+        return;
+      }
+
       this.isBuildingSection = false;
       this.activeSection = null;
       this.checkAllSectionsComplete();
 
       // Check if user has scrolled to another unbuilt section while this was building
-      const focus = this.getSectionInFocus();
-      if (!this.builtSections.has(focus)) {
-        this.buildSection(focus);
+      if (!this.isCompleted) {
+        const focus = this.getSectionInFocus();
+        if (!this.builtSections.has(focus)) {
+          this.buildSection(focus, runId);
+        }
       }
     }
   }
@@ -209,6 +230,7 @@ export class AgentCoordinator {
   }
 
   checkAllSectionsComplete() {
+    if (this.isSkipped) return;
     const all = ['hero', 'potencialize', 'servicos', 'contato', 'site-footer'];
     const isAllDone = all.every(id => this.builtSections.has(id));
     if (isAllDone && !this.isCompleted) {
@@ -222,15 +244,17 @@ export class AgentCoordinator {
    * SECTION 1: HEADER & HERO CONSTRUCTION
    * First wireframes -> then typography typed word-by-word -> then buttons & frames
    */
-  async buildHeroSection() {
-    this.engine.updateContainerHeight();
+  async buildHeroSection(runId) {
+    const shouldAbort = () => this.isAborted(runId);
+    if (shouldAbort()) return;
 
+    this.engine.updateContainerHeight();
     const boxes = this.hero.getTargetBoxes();
-    const gsap = window.gsap;
 
     this.ensureAgentsDeployed();
     this.tasks.completeTask('hero-init', 'HERO');
     await this.delay(200);
+    if (shouldAbort()) return;
 
     const grid = this.agent('grid');
     const layout = this.agent('layout');
@@ -247,12 +271,14 @@ export class AgentCoordinator {
           box: boxes.header(),
           tagName: '<header.site-header>',
           duration: 0.75,
+          shouldAbort,
           onMaterialize: () => {
+            if (shouldAbort()) return;
             this.heroAnimation.revealNav();
             this.tasks.completeTask('hero-header', 'HERO');
           }
         });
-      } else {
+      } else if (!shouldAbort()) {
         this.heroAnimation.revealNav();
         this.tasks.completeTask('hero-header', 'HERO');
       }
@@ -260,24 +286,28 @@ export class AgentCoordinator {
 
     const promiseLogo = (async () => {
       await this.delay(120);
+      if (shouldAbort()) return;
       if (layout) {
         await this.boxDrawer.drawBox({
           agent: layout,
           box: boxes.headerLogo(),
           tagName: '<a.brand-logo>',
           duration: 0.6,
+          shouldAbort,
           onMaterialize: () => {
+            if (shouldAbort()) return;
             this.heroAnimation.revealLogo();
             this.tasks.completeTask('hero-logo', 'HERO');
           }
         });
-      } else {
+      } else if (!shouldAbort()) {
         this.heroAnimation.revealLogo();
         this.tasks.completeTask('hero-logo', 'HERO');
       }
     })();
 
     await Promise.all([promiseHeader, promiseLogo]);
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // 2. Hero Symbol (Wireframe first -> then symbol appears)
@@ -287,7 +317,9 @@ export class AgentCoordinator {
         box: boxes.heroSymbol(),
         tagName: '<div.hero-symbol>',
         duration: 0.6,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealHeroSymbol();
           this.tasks.completeTask('hero-symbol', 'HERO');
         }
@@ -296,6 +328,7 @@ export class AgentCoordinator {
       this.heroAnimation.revealHeroSymbol();
       this.tasks.completeTask('hero-symbol', 'HERO');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // 3. Headline Part 1: "Construindo Aplicações" (Wireframe first -> then typed letter-by-letter)
@@ -305,52 +338,61 @@ export class AgentCoordinator {
         box: boxes.headlineMain ? boxes.headlineMain() : boxes.headline(),
         tagName: '<h1.headline-main>',
         duration: 0.7,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.tasks.completeTask('hero-headline', 'HERO');
         }
       });
     } else {
       this.tasks.completeTask('hero-headline', 'HERO');
     }
+    if (shouldAbort()) return;
 
     // Type "Construindo Aplicações" letter-by-letter with authentic typewriter effect
     const headlineMainEl = document.getElementById('headline-main');
     if (texto && headlineMainEl) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeHeadlineCharacters(headlineMainEl, texto, { charDelay: 34 });
+      await this.heroAnimation.typeHeadlineCharacters(headlineMainEl, texto, { charDelay: 34, shouldAbort });
     } else if (headlineMainEl) {
       headlineMainEl.querySelectorAll('.type-char').forEach(w => w.style.opacity = '1');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
-    // Headline Part 2: Selection box for "Web Inteligentes" BEFORE typing ("antes passado a caixa de seleção")
+    // Headline Part 2: Selection box for "Web Inteligentes" BEFORE typing
     if (grid) {
       await this.boxDrawer.drawBox({
         agent: grid,
         box: boxes.headlineHighlight(),
         tagName: '<span.highlight>',
-        duration: 0.58
+        duration: 0.58,
+        shouldAbort
       });
     }
+    if (shouldAbort()) return;
 
-    // Type "Web Inteligentes" letter-by-letter ("e precisa ser digitado", "ele precisa ser escrito por completo")
+    // Type "Web Inteligentes" letter-by-letter
     const headlineHighlightEl = document.getElementById('headline-highlight');
     if (texto && headlineHighlightEl) {
-      await this.heroAnimation.typeHeadlineCharacters(headlineHighlightEl, texto, { charDelay: 36 });
-      this.movement.returnToOrbit(texto);
+      await this.heroAnimation.typeHeadlineCharacters(headlineHighlightEl, texto, { charDelay: 36, shouldAbort });
+      if (!shouldAbort()) this.movement.returnToOrbit(texto);
     } else if (headlineHighlightEl) {
       headlineHighlightEl.querySelectorAll('.type-char').forEach(w => w.style.opacity = '1');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
-    // Apply glow effect at the end ("e por fim o efeito de glow")
+    // Apply glow effect at the end
     if (cor) {
       await this.boxDrawer.drawBox({
         agent: cor,
         box: boxes.headlineHighlight(),
         tagName: '<span.glow>',
         duration: 0.5,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.applyHeadlineGlow();
           this.tasks.completeTask('hero-gradient', 'HERO');
         }
@@ -359,6 +401,7 @@ export class AgentCoordinator {
       await this.heroAnimation.applyHeadlineGlow();
       this.tasks.completeTask('hero-gradient', 'HERO');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // Description (Wireframe first -> then typed word-by-word!)
@@ -368,16 +411,20 @@ export class AgentCoordinator {
         box: boxes.description(),
         tagName: '<p.hero-description>',
         duration: 0.65,
-        returnToOrbit: false
+        returnToOrbit: false,
+        shouldAbort
       });
+      if (shouldAbort()) return;
 
-      await this.heroAnimation.typeTextWords(document.getElementById('hero-description'), texto, { wordDelay: 38 });
+      await this.heroAnimation.typeTextWords(document.getElementById('hero-description'), texto, { wordDelay: 38, shouldAbort });
+      if (shouldAbort()) return;
       this.tasks.completeTask('hero-copy', 'HERO');
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#hero-description .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('hero-copy', 'HERO');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('hero'); return; }
 
     // 4. Primary CTA & Showcase Frame
@@ -387,7 +434,9 @@ export class AgentCoordinator {
         box: boxes.primaryCta(),
         tagName: '<button.projects>',
         duration: 0.6,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealPrimaryCta();
           this.tasks.completeTask('hero-cta', 'HERO');
         }
@@ -396,6 +445,7 @@ export class AgentCoordinator {
       this.heroAnimation.revealPrimaryCta();
       this.tasks.completeTask('hero-cta', 'HERO');
     }
+    if (shouldAbort()) return;
 
     if (grid) {
       await this.boxDrawer.drawBox({
@@ -403,7 +453,9 @@ export class AgentCoordinator {
         box: boxes.showcaseFrame(),
         tagName: '<div.n8n-showcase>',
         duration: 0.75,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealShowcaseFrame();
           this.tasks.completeTask('hero-showcase', 'HERO');
         }
@@ -415,14 +467,26 @@ export class AgentCoordinator {
   }
 
   /**
+   * Disconnects scroll observers & scroll listener cleanly
+   */
+  disconnectScrollObservers() {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    if (this.scrollCheckFn) {
+      window.removeEventListener('scroll', this.scrollCheckFn);
+      this.scrollCheckFn = null;
+    }
+  }
+
+  /**
    * ATTACH STRICT IN-VIEW SCROLL OBSERVERS
    * Replaces static sequential queue with live focus targeting:
    * As soon as any section is observed or scrolled into focus, the swarm immediately builds that section!
    */
   initScrollObservers() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
+    this.disconnectScrollObservers();
 
     const observerOptions = {
       root: null,
@@ -430,13 +494,16 @@ export class AgentCoordinator {
       threshold: [0.1, 0.25, 0.5]
     };
 
-    this.observer = new IntersectionObserver((entries) => {
+    const runId = this.runId;
+
+    this.observer = new IntersectionObserver(() => {
+      if (this.isAborted(runId) || this.isCompleted) return;
       const focus = this.getSectionInFocus();
       if (!this.builtSections.has(focus)) {
         if (this.isBuildingSection && this.activeSection !== focus) {
           this.shouldSwitchSection = true;
         } else if (!this.isBuildingSection) {
-          this.buildSection(focus);
+          this.buildSection(focus, runId);
         }
       }
     }, observerOptions);
@@ -449,14 +516,17 @@ export class AgentCoordinator {
     // Throttled scroll listener to guarantee instant response even during rapid scrolling
     let scrollTicking = false;
     this.scrollCheckFn = () => {
+      if (this.isAborted(runId) || this.isCompleted) return;
       if (!scrollTicking) {
         requestAnimationFrame(() => {
-          const focus = this.getSectionInFocus();
-          if (!this.builtSections.has(focus)) {
-            if (this.isBuildingSection && this.activeSection !== focus) {
-              this.shouldSwitchSection = true;
-            } else if (!this.isBuildingSection) {
-              this.buildSection(focus);
+          if (!this.isAborted(runId) && !this.isCompleted) {
+            const focus = this.getSectionInFocus();
+            if (!this.builtSections.has(focus)) {
+              if (this.isBuildingSection && this.activeSection !== focus) {
+                this.shouldSwitchSection = true;
+              } else if (!this.isBuildingSection) {
+                this.buildSection(focus, runId);
+              }
             }
           }
           scrollTicking = false;
@@ -470,12 +540,11 @@ export class AgentCoordinator {
 
   /**
    * SECTION 2: WORKFLOW (#potencialize)
-   * 1. Frame header & type title/subtitle word-by-word
-   * 2. Build Card 1 from scratch -> type Card 1 texts
-   * 3. Alt+Drag clone Card 1 -> Card 2 -> type Card 2 texts
-   * 4. Alt+Drag clone 2 more (Card 1 -> Card 3, Card 2 -> Card 4) -> edit/type texts
    */
-  async buildWorkflowSection() {
+  async buildWorkflowSection(runId) {
+    const shouldAbort = () => this.isAborted(runId);
+    if (shouldAbort()) return;
+
     this.engine.updateContainerHeight();
     const boxes = this.hero.getTargetBoxes();
 
@@ -492,21 +561,26 @@ export class AgentCoordinator {
         agent: grid,
         box: boxes.workflowHeader(),
         tagName: '<section.workflow>',
-        duration: 0.65
+        duration: 0.65,
+        shouldAbort
       });
     }
+    if (shouldAbort()) return;
 
     // 2. Type Workflow Title and Subtitle word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('workflow-title'), texto, { wordDelay: 45 });
-      await this.heroAnimation.typeTextWords(document.getElementById('workflow-subtitle'), texto, { wordDelay: 32 });
+      await this.heroAnimation.typeTextWords(document.getElementById('workflow-title'), texto, { wordDelay: 45, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('workflow-subtitle'), texto, { wordDelay: 32, shouldAbort });
+      if (shouldAbort()) return;
       this.tasks.completeTask('wf-header', 'WORKFLOW');
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#workflow-title .type-word, #workflow-subtitle .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('wf-header', 'WORKFLOW');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // 3. Card 1: Build from scratch
@@ -516,7 +590,9 @@ export class AgentCoordinator {
         box: boxes.workflowCard1(),
         tagName: '<card.ai-workflow [Master]>',
         duration: 0.65,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealWorkflowCard(1);
           this.heroAnimation.revealWorkflowCardImage(1);
           this.tasks.completeTask('wf-card-1', 'WORKFLOW');
@@ -527,16 +603,20 @@ export class AgentCoordinator {
       this.heroAnimation.revealWorkflowCardImage(1);
       this.tasks.completeTask('wf-card-1', 'WORKFLOW');
     }
+    if (shouldAbort()) return;
 
     // Type Card 1 title & description word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-1'), texto, { wordDelay: 38 });
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-1'), texto, { wordDelay: 26 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-1'), texto, { wordDelay: 38, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-1'), texto, { wordDelay: 26, shouldAbort });
+      if (shouldAbort()) return;
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#card-tec-title-1 .type-word, #card-tec-desc-1 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // 4. Card 2: Clone to the side (Card 1 -> Card 2)
@@ -547,7 +627,9 @@ export class AgentCoordinator {
         toBox: boxes.workflowCard2(),
         tagName: '<card.crm-n8n [Clone]>',
         duration: 0.65,
+        shouldAbort,
         onLand: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealWorkflowCard(2);
           this.heroAnimation.revealWorkflowCardImage(2);
           this.tasks.completeTask('wf-card-2', 'WORKFLOW');
@@ -558,16 +640,20 @@ export class AgentCoordinator {
       this.heroAnimation.revealWorkflowCardImage(2);
       this.tasks.completeTask('wf-card-2', 'WORKFLOW');
     }
+    if (shouldAbort()) return;
 
     // Edit/type Card 2 title & description word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-2'), texto, { wordDelay: 38 });
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-2'), texto, { wordDelay: 26 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-2'), texto, { wordDelay: 38, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-2'), texto, { wordDelay: 26, shouldAbort });
+      if (shouldAbort()) return;
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#card-tec-title-2 .type-word, #card-tec-desc-2 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // 5. Clone 2 more downwards (Card 1 -> Card 3, and Card 2 -> Card 4)
@@ -579,13 +665,15 @@ export class AgentCoordinator {
           toBox: boxes.workflowCard3(),
           tagName: '<card.analytics [Clone]>',
           duration: 0.65,
+          shouldAbort,
           onLand: () => {
+            if (shouldAbort()) return;
             this.heroAnimation.revealWorkflowCard(3);
             this.heroAnimation.revealWorkflowCardImage(3);
             this.tasks.completeTask('wf-card-3', 'WORKFLOW');
           }
         });
-      } else {
+      } else if (!shouldAbort()) {
         this.heroAnimation.revealWorkflowCard(3);
         this.heroAnimation.revealWorkflowCardImage(3);
         this.tasks.completeTask('wf-card-3', 'WORKFLOW');
@@ -594,6 +682,7 @@ export class AgentCoordinator {
 
     const cloneCard4 = async () => {
       await this.delay(120);
+      if (shouldAbort()) return;
       if (layout) {
         await this.boxDrawer.cloneAndDrag({
           agent: layout,
@@ -601,13 +690,15 @@ export class AgentCoordinator {
           toBox: boxes.workflowCard4(),
           tagName: '<card.ecommerce [Clone]>',
           duration: 0.65,
+          shouldAbort,
           onLand: () => {
+            if (shouldAbort()) return;
             this.heroAnimation.revealWorkflowCard(4);
             this.heroAnimation.revealWorkflowCardImage(4);
             this.tasks.completeTask('wf-card-4', 'WORKFLOW');
           }
         });
-      } else {
+      } else if (!shouldAbort()) {
         this.heroAnimation.revealWorkflowCard(4);
         this.heroAnimation.revealWorkflowCardImage(4);
         this.tasks.completeTask('wf-card-4', 'WORKFLOW');
@@ -615,14 +706,20 @@ export class AgentCoordinator {
     };
 
     await Promise.all([cloneCard3(), cloneCard4()]);
+    if (shouldAbort()) return;
+    if (this.shouldSwitchSection) { this.quickCompleteSection('potencialize'); return; }
 
     // Edit/type Card 3 and Card 4 texts word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-3'), texto, { wordDelay: 36 });
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-3'), texto, { wordDelay: 25 });
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-4'), texto, { wordDelay: 36 });
-      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-4'), texto, { wordDelay: 25 });
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-3'), texto, { wordDelay: 36, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-3'), texto, { wordDelay: 25, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-title-4'), texto, { wordDelay: 36, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('card-tec-desc-4'), texto, { wordDelay: 25, shouldAbort });
+      if (shouldAbort()) return;
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#card-tec-title-3 .type-word, #card-tec-desc-3 .type-word, #card-tec-title-4 .type-word, #card-tec-desc-4 .type-word').forEach(w => w.style.opacity = '1');
@@ -631,12 +728,11 @@ export class AgentCoordinator {
 
   /**
    * SECTION 3: SERVICES (#servicos)
-   * 1. Frame header & type title/subtitle word-by-word
-   * 2. Build Card 1 from scratch -> mount icon -> type texts
-   * 3. Alt+Drag clone Card 1 -> Card 2 -> mount icon -> edit/type texts
-   * 4. Alt+Drag clone Card 2 -> Card 3 -> mount icon -> edit/type texts
    */
-  async buildServicesSection() {
+  async buildServicesSection(runId) {
+    const shouldAbort = () => this.isAborted(runId);
+    if (shouldAbort()) return;
+
     this.engine.updateContainerHeight();
     const boxes = this.hero.getTargetBoxes();
 
@@ -652,21 +748,26 @@ export class AgentCoordinator {
         agent: grid,
         box: boxes.servicesHeader(),
         tagName: '<section.services>',
-        duration: 0.65
+        duration: 0.65,
+        shouldAbort
       });
     }
+    if (shouldAbort()) return;
 
     // 2. Type Services Title and Subtitle word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('services-title'), texto, { wordDelay: 45 });
-      await this.heroAnimation.typeTextWords(document.getElementById('services-subtitle'), texto, { wordDelay: 32 });
+      await this.heroAnimation.typeTextWords(document.getElementById('services-title'), texto, { wordDelay: 45, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('services-subtitle'), texto, { wordDelay: 32, shouldAbort });
+      if (shouldAbort()) return;
       this.tasks.completeTask('srv-header', 'SERVICES');
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#services-title .type-word, #services-subtitle .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('srv-header', 'SERVICES');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('servicos'); return; }
 
     // 3. Card 1: Build first card from scratch
@@ -676,7 +777,9 @@ export class AgentCoordinator {
         box: boxes.serviceCard1(),
         tagName: '<card.ai-ml [Master]>',
         duration: 0.65,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealServiceCard(1);
           this.heroAnimation.revealServiceIcon(1);
           this.tasks.completeTask('srv-card-1', 'SERVICES');
@@ -687,16 +790,20 @@ export class AgentCoordinator {
       this.heroAnimation.revealServiceIcon(1);
       this.tasks.completeTask('srv-card-1', 'SERVICES');
     }
+    if (shouldAbort()) return;
 
     // Type Card 1 title & description word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('service-title-1'), texto, { wordDelay: 38 });
-      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-1'), texto, { wordDelay: 26 });
+      await this.heroAnimation.typeTextWords(document.getElementById('service-title-1'), texto, { wordDelay: 38, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-1'), texto, { wordDelay: 26, shouldAbort });
+      if (shouldAbort()) return;
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#service-title-1 .type-word, #service-desc-1 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('servicos'); return; }
 
     // 4. Card 2: Clone from Card 1 (Alt+Drag)
@@ -707,7 +814,9 @@ export class AgentCoordinator {
         toBox: boxes.serviceCard2(),
         tagName: '<card.n8n-auto [Clone]>',
         duration: 0.65,
+        shouldAbort,
         onLand: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealServiceCard(2);
           this.heroAnimation.revealServiceIcon(2);
           this.tasks.completeTask('srv-card-2', 'SERVICES');
@@ -718,16 +827,20 @@ export class AgentCoordinator {
       this.heroAnimation.revealServiceIcon(2);
       this.tasks.completeTask('srv-card-2', 'SERVICES');
     }
+    if (shouldAbort()) return;
 
     // Edit/type Card 2 title & description word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('service-title-2'), texto, { wordDelay: 38 });
-      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-2'), texto, { wordDelay: 26 });
+      await this.heroAnimation.typeTextWords(document.getElementById('service-title-2'), texto, { wordDelay: 38, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-2'), texto, { wordDelay: 26, shouldAbort });
+      if (shouldAbort()) return;
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#service-title-2 .type-word, #service-desc-2 .type-word').forEach(w => w.style.opacity = '1');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('servicos'); return; }
 
     // 5. Card 3: Clone from Card 2 (Alt+Drag)
@@ -738,7 +851,9 @@ export class AgentCoordinator {
         toBox: boxes.serviceCard3(),
         tagName: '<card.fullstack [Clone]>',
         duration: 0.65,
+        shouldAbort,
         onLand: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealServiceCard(3);
           this.heroAnimation.revealServiceIcon(3);
           this.tasks.completeTask('srv-card-3', 'SERVICES');
@@ -749,12 +864,15 @@ export class AgentCoordinator {
       this.heroAnimation.revealServiceIcon(3);
       this.tasks.completeTask('srv-card-3', 'SERVICES');
     }
+    if (shouldAbort()) return;
 
     // Edit/type Card 3 title & description word-by-word
     if (texto) {
       this.movement.leaveOrbit(texto);
-      await this.heroAnimation.typeTextWords(document.getElementById('service-title-3'), texto, { wordDelay: 38 });
-      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-3'), texto, { wordDelay: 26 });
+      await this.heroAnimation.typeTextWords(document.getElementById('service-title-3'), texto, { wordDelay: 38, shouldAbort });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('service-desc-3'), texto, { wordDelay: 26, shouldAbort });
+      if (shouldAbort()) return;
       this.movement.returnToOrbit(texto);
     } else {
       document.querySelectorAll('#service-title-3 .type-word, #service-desc-3 .type-word').forEach(w => w.style.opacity = '1');
@@ -763,9 +881,11 @@ export class AgentCoordinator {
 
   /**
    * SECTION 4: CALL TO ACTION (#contato)
-   * Wireframe container -> wireframe & type title -> wireframe & type subtitle -> wireframe & reveal button
    */
-  async buildCtaSection() {
+  async buildCtaSection(runId) {
+    const shouldAbort = () => this.isAborted(runId);
+    if (shouldAbort()) return;
+
     this.engine.updateContainerHeight();
     const boxes = this.hero.getTargetBoxes();
 
@@ -780,13 +900,16 @@ export class AgentCoordinator {
         box: boxes.ctaContainer(),
         tagName: '<section.cta>',
         duration: 0.75,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.tasks.completeTask('cta-frame', 'CTA');
         }
       });
     } else {
       this.tasks.completeTask('cta-frame', 'CTA');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('contato'); return; }
 
     // 2. Title & Subtitle: Wireframe first, then typed word-by-word!
@@ -797,9 +920,12 @@ export class AgentCoordinator {
         box: boxes.ctaTitle(),
         tagName: '<h2.cta-title>',
         duration: 0.55,
-        returnToOrbit: false
+        returnToOrbit: false,
+        shouldAbort
       });
-      await this.heroAnimation.typeTextWords(document.getElementById('cta-title'), texto, { wordDelay: 45 });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('cta-title'), texto, { wordDelay: 45, shouldAbort });
+      if (shouldAbort()) return;
 
       // Wireframe subtitle
       await this.boxDrawer.drawBox({
@@ -807,9 +933,12 @@ export class AgentCoordinator {
         box: boxes.ctaSubtitle(),
         tagName: '<p.cta-subtitle>',
         duration: 0.6,
-        returnToOrbit: false
+        returnToOrbit: false,
+        shouldAbort
       });
-      await this.heroAnimation.typeTextWords(document.getElementById('cta-subtitle'), texto, { wordDelay: 32 });
+      if (shouldAbort()) return;
+      await this.heroAnimation.typeTextWords(document.getElementById('cta-subtitle'), texto, { wordDelay: 32, shouldAbort });
+      if (shouldAbort()) return;
 
       this.tasks.completeTask('cta-copy', 'CTA');
       this.movement.returnToOrbit(texto);
@@ -817,6 +946,7 @@ export class AgentCoordinator {
       document.querySelectorAll('#cta-title .type-word, #cta-subtitle .type-word').forEach(w => w.style.opacity = '1');
       this.tasks.completeTask('cta-copy', 'CTA');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('contato'); return; }
 
     // 3. Contact Button: Wireframe first, then button materializes!
@@ -826,7 +956,9 @@ export class AgentCoordinator {
         box: boxes.ctaContactBtn(),
         tagName: '<button.contact-action>',
         duration: 0.6,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealCtaButton();
           this.tasks.completeTask('cta-button', 'CTA');
         }
@@ -839,9 +971,11 @@ export class AgentCoordinator {
 
   /**
    * SECTION 5: FOOTER (#site-footer) & 100% COMPLETION
-   * Wireframe container -> wireframe brand -> wireframe symbol & socials
    */
-  async buildFooterSection() {
+  async buildFooterSection(runId) {
+    const shouldAbort = () => this.isAborted(runId);
+    if (shouldAbort()) return;
+
     this.engine.updateContainerHeight();
     const boxes = this.hero.getTargetBoxes();
 
@@ -857,13 +991,16 @@ export class AgentCoordinator {
         box: boxes.footer(),
         tagName: '<footer.site-footer>',
         duration: 0.65,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.tasks.completeTask('ft-frame', 'FOOTER');
         }
       });
     } else {
       this.tasks.completeTask('ft-frame', 'FOOTER');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('site-footer'); return; }
 
     // 2. Layout frames footer brand logo
@@ -873,7 +1010,9 @@ export class AgentCoordinator {
         box: boxes.footerBrand(),
         tagName: '<footer.brand>',
         duration: 0.55,
+        shouldAbort,
         onMaterialize: () => {
+          if (shouldAbort()) return;
           this.heroAnimation.revealFooterBrand();
           this.tasks.completeTask('ft-brand', 'FOOTER');
         }
@@ -882,6 +1021,7 @@ export class AgentCoordinator {
       this.heroAnimation.revealFooterBrand();
       this.tasks.completeTask('ft-brand', 'FOOTER');
     }
+    if (shouldAbort()) return;
     if (this.shouldSwitchSection) { this.quickCompleteSection('site-footer'); return; }
 
     // 3. Foto frames footer symbol & Motion frames social links
@@ -892,28 +1032,33 @@ export class AgentCoordinator {
           box: boxes.footerSymbol(),
           tagName: '<footer.symbol>',
           duration: 0.5,
+          shouldAbort,
           onMaterialize: () => {
+            if (shouldAbort()) return;
             this.heroAnimation.revealFooterSymbol();
           }
         });
-      } else {
+      } else if (!shouldAbort()) {
         this.heroAnimation.revealFooterSymbol();
       }
     })();
 
     const promiseSocials = (async () => {
       await this.delay(100);
+      if (shouldAbort()) return;
       if (motion) {
         await this.boxDrawer.drawBox({
           agent: motion,
           box: boxes.footerSocial(),
           tagName: '<footer.socials>',
           duration: 0.55,
+          shouldAbort,
           onMaterialize: () => {
+            if (shouldAbort()) return;
             this.heroAnimation.revealFooterSocials();
           }
         });
-      } else {
+      } else if (!shouldAbort()) {
         this.heroAnimation.revealFooterSocials();
       }
     })();
@@ -939,12 +1084,14 @@ export class AgentCoordinator {
   }
 
   /**
-   * On 100% completion:
+   * On 100% natural completion:
    * Smoothly scrolls back to the first section (#hero), scatters cursors
    * across the first section around "Construindo Aplicações...", hides HUD,
    * and reveals the restart replay button
    */
   async finishAndEnableRestart() {
+    this.disconnectScrollObservers();
+
     // 1. Hide HUD build bar
     const hud = document.getElementById('construction-hud');
     if (hud) hud.classList.add('is-hidden');
@@ -962,31 +1109,42 @@ export class AgentCoordinator {
 
   /**
    * Scatters the 7 cursors in aesthetic non-intrusive positions across the FIRST section (#hero)
-   * around "Construindo Aplicações Web Inteligentes", the brand symbol, CTA, and showcase
+   * Responsively clamped for mobile and desktop viewports
    */
   scatterInFirstSection() {
     this.movement.stopMouseOrbit();
+    this.boxDrawer.clearAll();
 
     const agents = this.engine.getActiveAgents();
-    const w = window.innerWidth;
+    const w = document.documentElement.clientWidth || window.innerWidth;
+    const isMobile = w <= 768;
     const heroEl = document.getElementById('hero');
     const heroTop = heroEl ? heroEl.offsetTop : 0;
     const gsap = window.gsap;
 
-    // 7 Non-intrusive positions distributed across the first section (#hero):
-    // Positioned around "Construindo Aplicações...", the brand symbol, and showcase margins
-    const heroPositions = [
-      { x: w * 0.12, y: heroTop + 140, rot: -15 }, // GRID: upper-left of hero
-      { x: w * 0.88, y: heroTop + 160, rot: 15 },  // LAYOUT: upper-right of hero
-      { x: w * 0.08, y: heroTop + 330, rot: -8 },  // TEXTO: left of "Construindo Aplicações"
-      { x: w * 0.90, y: heroTop + 400, rot: 18 },  // COR: right of "Web Inteligentes"
-      { x: w * 0.12, y: heroTop + 540, rot: -16 }, // FOTO: left gutter near CTA
-      { x: w * 0.86, y: heroTop + 560, rot: 12 },  // UI: right of CTA button
-      { x: w * 0.20, y: heroTop + 720, rot: -10 }  // MOTION: lower gutter next to showcase
-    ];
+    const heroPositions = isMobile
+      ? [
+          { x: Math.max(16, w * 0.08), y: heroTop + 100, rot: -15 },
+          { x: Math.min(w - 28, w * 0.86), y: heroTop + 115, rot: 15 },
+          { x: Math.max(16, w * 0.06), y: heroTop + 260, rot: -8 },
+          { x: Math.min(w - 28, w * 0.88), y: heroTop + 310, rot: 18 },
+          { x: Math.max(16, w * 0.08), y: heroTop + 445, rot: -16 },
+          { x: Math.min(w - 28, w * 0.86), y: heroTop + 470, rot: 12 },
+          { x: Math.max(16, w * 0.14), y: heroTop + 590, rot: -10 }
+        ]
+      : [
+          { x: w * 0.12, y: heroTop + 140, rot: -15 },
+          { x: w * 0.88, y: heroTop + 160, rot: 15 },
+          { x: w * 0.08, y: heroTop + 330, rot: -8 },
+          { x: w * 0.90, y: heroTop + 400, rot: 18 },
+          { x: w * 0.12, y: heroTop + 540, rot: -16 },
+          { x: w * 0.86, y: heroTop + 560, rot: 12 },
+          { x: w * 0.20, y: heroTop + 720, rot: -10 }
+        ];
 
     agents.forEach((agent, i) => {
       const pos = heroPositions[i % heroPositions.length];
+      if (gsap) gsap.killTweensOf(agent);
       agent.setVisible(true);
       agent.setIdle(false);
       agent.setAction('STANDBY', '');
@@ -1013,6 +1171,73 @@ export class AgentCoordinator {
   }
 
   /**
+   * Initializes Skip Animation button in the Construction HUD bar
+   */
+  initSkipButton() {
+    const skipBtn = document.getElementById('hud-skip-btn');
+    if (!skipBtn) return;
+
+    skipBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.skipAnimation();
+    });
+  }
+
+  /**
+   * Immediately skips the swarm construction animation:
+   * - Halts all active agents, orbits, tweens, and wireframes
+   * - Hides all agents completely
+   * - Displays the complete site immediately with zero pending animations
+   * - Hides the loading HUD bar and shows the Replay button
+   */
+  skipAnimation() {
+    this.isSkipped = true;
+    this.runId += 1;
+    this.isCompleted = true;
+    this.isBuildingSection = false;
+    this.activeSection = null;
+    this.shouldSwitchSection = false;
+
+    // 1. Stop observers so scrolling won't re-trigger builds
+    this.disconnectScrollObservers();
+
+    // 2. Stop all agent movement, orbits, tweens, and clear any wireframes
+    this.movement.stopMouseOrbit();
+    this.movement.stopAll();
+    this.boxDrawer.clearAll();
+
+    const activeAgents = this.engine.getActiveAgents();
+    if (window.gsap) {
+      activeAgents.forEach(ag => {
+        window.gsap.killTweensOf(ag);
+        if (ag.element) window.gsap.killTweensOf(ag.element);
+        if (ag.svgPointer) window.gsap.killTweensOf(ag.svgPointer);
+      });
+    }
+
+    // 3. Hide all agents and the agents overlay completely
+    this.engine.hideAll();
+    this.engine.setLayerHidden(true);
+
+    // 4. Mark all sections and tasks as complete
+    ['hero', 'potencialize', 'servicos', 'contato', 'site-footer'].forEach(id => {
+      this.builtSections.add(id);
+    });
+    this.tasks.tasks.forEach(t => { t.completed = true; });
+    this.tasks.updateHUD(100, 'READY');
+
+    // 5. Immediately display the entire site in its final state
+    this.heroAnimation.showFinalStateImmediate();
+
+    // 6. Hide the loading HUD bar and expose Replay button in case user wants to watch later
+    const hud = document.getElementById('construction-hud');
+    if (hud) hud.classList.add('is-hidden');
+
+    const restartBtn = document.getElementById('restart-experience-btn');
+    if (restartBtn) restartBtn.classList.add('is-visible');
+  }
+
+  /**
    * Initializes Restart Button Click: resets state, scrolls smoothly to top,
    * regroups cursors at the center, and restarts Swarm
    */
@@ -1021,18 +1246,29 @@ export class AgentCoordinator {
     if (!restartBtn) return;
 
     restartBtn.addEventListener('click', async () => {
-      // 1. Hide restart button
+      // 1. Abort any previous run & clean up
+      this.runId += 1;
+      const restartRunId = this.runId;
+      this.isSkipped = false;
+      this.disconnectScrollObservers();
+      this.movement.stopMouseOrbit();
+      this.movement.stopAll();
+      this.boxDrawer.clearAll();
+
+      // 2. Hide restart button
       restartBtn.classList.remove('is-visible');
 
-      // 2. Smoothly scroll to the very top
+      // 3. Smoothly scroll to the very top
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      // 3. Wait for scroll to reach top
+      // 4. Wait for scroll to reach top
       await this.delay(650);
+      if (this.isAborted(restartRunId)) return;
 
-      // 4. Reset section states and tasks
+      // 5. Reset section states and tasks
       this.builtSections.clear();
       this.isBuildingSection = false;
+      this.activeSection = null;
       this.shouldSwitchSection = false;
       this.isCompleted = false;
       this.agentsDeployed = false;
@@ -1040,23 +1276,29 @@ export class AgentCoordinator {
       this.heroAnimation.initElementStates();
       this.tasks.reset();
 
-      // 5. Restore HUD
+      // 6. Restore HUD & agents layer
       const hud = document.getElementById('construction-hud');
       if (hud) {
         hud.classList.remove('is-hidden', 'is-completed');
       }
+      this.engine.setLayerHidden(false);
 
-      // 6. Regroup cursors at hero center before restarting
+      // 7. Regroup cursors at hero center before restarting
       const activeAgents = this.engine.getActiveAgents();
-      const centerX = window.innerWidth * 0.5;
-      const centerY = window.innerHeight * 0.45;
+      const viewportW = document.documentElement.clientWidth || window.innerWidth;
+      const centerX = viewportW * 0.5;
+      const centerY = window.innerHeight * 0.42;
+      const spread = viewportW <= 768 ? 42 : 60;
       const gsap = window.gsap;
 
       activeAgents.forEach((ag, idx) => {
+        ag.setVisible(true);
+        ag.setIdle(false);
         const angle = (idx / activeAgents.length) * Math.PI * 2;
-        const targetX = centerX + Math.cos(angle) * 60;
-        const targetY = centerY + Math.sin(angle) * 60;
+        const targetX = centerX + Math.cos(angle) * spread;
+        const targetY = centerY + Math.sin(angle) * spread;
         if (gsap) {
+          gsap.killTweensOf(ag);
           gsap.to(ag, {
             x: targetX,
             y: targetY,
@@ -1070,16 +1312,14 @@ export class AgentCoordinator {
       });
 
       await this.delay(600);
+      if (this.isAborted(restartRunId)) return;
 
-      // 7. Restart Swarm construction from beginning
+      // 8. Restart Swarm construction from beginning
       await this.start();
     });
   }
 
   skipToFinalState() {
-    this.heroAnimation.showFinalStateImmediate();
-    this.tasks.tasks.forEach(t => t.completed = true);
-    this.tasks.updateHUD(100, 'READY');
-    this.scatterInFirstSection();
+    this.skipAnimation();
   }
 }

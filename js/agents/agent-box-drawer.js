@@ -9,6 +9,27 @@ export class AgentBoxDrawer {
     this.container = container || document.getElementById('agents-layer');
     this.movement = movement;
     this.activeBoxes = [];
+    this.activeTweens = new Set();
+    this.activeTimers = new Set();
+  }
+
+  scheduleTimer(fn, ms) {
+    const id = setTimeout(() => {
+      this.activeTimers.delete(id);
+      fn();
+    }, ms);
+    this.activeTimers.add(id);
+    return id;
+  }
+
+  trackTween(tween) {
+    if (!tween) return tween;
+    this.activeTweens.add(tween);
+    return tween;
+  }
+
+  untrackTween(tween) {
+    if (tween) this.activeTweens.delete(tween);
   }
 
   /**
@@ -33,10 +54,13 @@ export class AgentBoxDrawer {
    * 3. Target content materializes inside the frame and the wireframe dissolves.
    * 4. Agent smoothly returns back into the mouse orbit.
    */
-  async drawBox({ agent, box, tagName = 'div', duration = 0.75, onMaterialize = null, returnToOrbit = true }) {
+  async drawBox({ agent, box, tagName = 'div', duration = 0.75, onMaterialize = null, returnToOrbit = true, shouldAbort = null }) {
     const gsap = window.gsap;
+    const isAborted = () => Boolean(shouldAbort && shouldAbort());
+    if (isAborted()) return null;
+
     if (!this.container || !agent || !box) {
-      if (onMaterialize) onMaterialize();
+      if (onMaterialize && !isAborted()) onMaterialize();
       return null;
     }
 
@@ -58,24 +82,34 @@ export class AgentBoxDrawer {
     const travelDuration = Math.min(0.52, Math.max(0.24, dist / 2200)) / (agent.profile.speed || 1);
 
     await new Promise(res => {
+      if (isAborted()) { res(); return; }
       if (!gsap) {
         agent.setPosition(startX, startY);
         res();
         return;
       }
 
-      gsap.to(agent, {
+      gsap.killTweensOf(agent);
+      let tween = null;
+      tween = this.trackTween(gsap.to(agent, {
         x: startX,
         y: startY,
         duration: travelDuration,
         ease: 'power2.out',
         onUpdate: () => agent.setPosition(agent.x, agent.y),
+        onInterrupt: () => {
+          this.untrackTween(tween);
+          res();
+        },
         onComplete: () => {
-          agent.setAction('ANCHORING', 'is-selecting');
+          this.untrackTween(tween);
+          if (!isAborted()) agent.setAction('ANCHORING', 'is-selecting');
           res();
         }
-      });
+      }));
     });
+
+    if (isAborted()) return null;
 
     const boxEl = document.createElement('div');
     boxEl.className = 'wireframe-box';
@@ -113,20 +147,30 @@ export class AgentBoxDrawer {
     agent.setAction('DRAWING BOX', 'is-selecting');
 
     await new Promise(resolve => {
+      if (isAborted()) {
+        if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);
+        resolve(null);
+        return;
+      }
+
       if (!gsap) {
         boxEl.style.width = `${box.width}px`;
         boxEl.style.height = `${box.height}px`;
         agent.setPosition(targetX, targetY);
-        if (onMaterialize) onMaterialize();
-        setTimeout(() => {
+        if (onMaterialize && !isAborted()) onMaterialize();
+        this.scheduleTimer(() => {
           boxEl.classList.add('is-complete');
-          setTimeout(() => boxEl.remove(), 400);
+          this.scheduleTimer(() => {
+            if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);
+          }, 400);
           resolve(boxEl);
         }, 300);
         return;
       }
 
-      gsap.to(agent, {
+      gsap.killTweensOf(agent);
+      let tween = null;
+      tween = this.trackTween(gsap.to(agent, {
         x: targetX,
         y: targetY,
         duration: duration / (agent.profile.speed || 1),
@@ -142,7 +186,19 @@ export class AgentBoxDrawer {
             dimEl.textContent = `${Math.round(currentW)} × ${Math.round(currentH)}`;
           }
         },
+        onInterrupt: () => {
+          this.untrackTween(tween);
+          if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);
+          resolve(null);
+        },
         onComplete: () => {
+          this.untrackTween(tween);
+          if (isAborted()) {
+            if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);
+            resolve(null);
+            return;
+          }
+
           boxEl.style.width = `${box.width}px`;
           boxEl.style.height = `${box.height}px`;
           if (dimEl) {
@@ -155,9 +211,9 @@ export class AgentBoxDrawer {
             onMaterialize();
           }
 
-          setTimeout(() => {
+          this.scheduleTimer(() => {
             boxEl.classList.add('is-complete');
-            setTimeout(() => {
+            this.scheduleTimer(() => {
               if (boxEl.parentNode) boxEl.parentNode.removeChild(boxEl);
               const idx = this.activeBoxes.indexOf(boxEl);
               if (idx !== -1) this.activeBoxes.splice(idx, 1);
@@ -166,12 +222,16 @@ export class AgentBoxDrawer {
 
           resolve(boxEl);
         }
-      });
+      }));
     });
 
+    if (isAborted()) return null;
+
     if (returnToOrbit && this.movement) {
-      await new Promise(r => setTimeout(r, 160));
-      this.movement.returnToOrbit(agent);
+      await new Promise(r => this.scheduleTimer(r, 160));
+      if (!isAborted()) {
+        this.movement.returnToOrbit(agent);
+      }
     }
 
     return boxEl;
@@ -184,10 +244,13 @@ export class AgentBoxDrawer {
    * 3. Drags the clone box AND cursor together across to toBox.
    * 4. Snaps into place at toBox, invokes onLand callback to materialize target, and dissolves clone.
    */
-  async cloneAndDrag({ agent, fromBox, toBox, tagName = '<clone.duplicate [Alt+Drag]>', duration = 0.7, onLand = null, returnToOrbit = true }) {
+  async cloneAndDrag({ agent, fromBox, toBox, tagName = '<clone.duplicate [Alt+Drag]>', duration = 0.7, onLand = null, returnToOrbit = true, shouldAbort = null }) {
     const gsap = window.gsap;
+    const isAborted = () => Boolean(shouldAbort && shouldAbort());
+    if (isAborted()) return null;
+
     if (!this.container || !agent || !fromBox || !toBox) {
-      if (onLand) onLand();
+      if (onLand && !isAborted()) onLand();
       return null;
     }
 
@@ -210,20 +273,32 @@ export class AgentBoxDrawer {
     const approachDuration = Math.min(0.45, Math.max(0.2, distToSource / 2400)) / (agent.profile.speed || 1);
 
     await new Promise(res => {
+      if (isAborted()) { res(); return; }
       if (!gsap) {
         agent.setPosition(startX, startY);
         res();
         return;
       }
-      gsap.to(agent, {
+      gsap.killTweensOf(agent);
+      let tween = null;
+      tween = this.trackTween(gsap.to(agent, {
         x: startX,
         y: startY,
         duration: approachDuration,
         ease: 'power2.out',
         onUpdate: () => agent.setPosition(agent.x, agent.y),
-        onComplete: res
-      });
+        onInterrupt: () => {
+          this.untrackTween(tween);
+          res();
+        },
+        onComplete: () => {
+          this.untrackTween(tween);
+          res();
+        }
+      }));
     });
+
+    if (isAborted()) return null;
 
     // 2. Create the clone ghost frame
     const cloneBox = document.createElement('div');
@@ -258,19 +333,28 @@ export class AgentBoxDrawer {
     agent.setAction('CLONING [ALT+DRAG]', 'is-typing');
 
     await new Promise(resolve => {
+      if (isAborted()) {
+        if (cloneBox.parentNode) cloneBox.parentNode.removeChild(cloneBox);
+        resolve();
+        return;
+      }
+
       if (!gsap) {
         cloneBox.style.left = `${endX}px`;
         cloneBox.style.top = `${endY}px`;
         agent.setPosition(endX, endY);
-        if (onLand) onLand();
+        if (onLand && !isAborted()) onLand();
         cloneBox.classList.add('is-complete');
-        setTimeout(() => cloneBox.remove(), 300);
+        this.scheduleTimer(() => {
+          if (cloneBox.parentNode) cloneBox.parentNode.removeChild(cloneBox);
+        }, 300);
         resolve();
         return;
       }
 
       const dragObj = { x: startX, y: startY };
-      gsap.to(dragObj, {
+      let tween = null;
+      tween = this.trackTween(gsap.to(dragObj, {
         x: endX,
         y: endY,
         duration: duration / (agent.profile.speed || 1),
@@ -280,15 +364,27 @@ export class AgentBoxDrawer {
           cloneBox.style.top = `${dragObj.y}px`;
           agent.setPosition(dragObj.x, dragObj.y);
         },
+        onInterrupt: () => {
+          this.untrackTween(tween);
+          if (cloneBox.parentNode) cloneBox.parentNode.removeChild(cloneBox);
+          resolve();
+        },
         onComplete: () => {
+          this.untrackTween(tween);
+          if (isAborted()) {
+            if (cloneBox.parentNode) cloneBox.parentNode.removeChild(cloneBox);
+            resolve();
+            return;
+          }
+
           cloneBox.classList.add('is-snapping');
           agent.setAction('DROPPED', 'is-selecting');
 
           if (onLand) onLand();
 
-          setTimeout(() => {
+          this.scheduleTimer(() => {
             cloneBox.classList.add('is-complete');
-            setTimeout(() => {
+            this.scheduleTimer(() => {
               if (cloneBox.parentNode) cloneBox.parentNode.removeChild(cloneBox);
               const idx = this.activeBoxes.indexOf(cloneBox);
               if (idx !== -1) this.activeBoxes.splice(idx, 1);
@@ -297,16 +393,28 @@ export class AgentBoxDrawer {
 
           resolve();
         }
-      });
+      }));
     });
 
+    if (isAborted()) return null;
+
     if (returnToOrbit && this.movement) {
-      await new Promise(r => setTimeout(r, 160));
-      this.movement.returnToOrbit(agent);
+      await new Promise(r => this.scheduleTimer(r, 160));
+      if (!isAborted()) {
+        this.movement.returnToOrbit(agent);
+      }
     }
   }
 
   clearAll() {
+    this.activeTimers.forEach(id => clearTimeout(id));
+    this.activeTimers.clear();
+
+    this.activeTweens.forEach(tween => {
+      if (tween && tween.kill) tween.kill();
+    });
+    this.activeTweens.clear();
+
     this.activeBoxes.forEach(box => {
       if (box.parentNode) box.parentNode.removeChild(box);
     });

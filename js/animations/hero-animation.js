@@ -68,6 +68,9 @@ export class HeroAnimation {
    */
   async typeHeadlineCharacters(element, agent = null, options = {}) {
     if (!element) return;
+    const shouldAbort = options.shouldAbort;
+    if (shouldAbort && shouldAbort()) return;
+
     const chars = this.prepareHeadlineForTyping(element);
     const charDelay = options.charDelay || 36; // 36ms per letter
 
@@ -85,6 +88,8 @@ export class HeroAnimation {
     }
 
     for (let i = 0; i < chars.length; i++) {
+      if (shouldAbort && shouldAbort()) return;
+
       const charSpan = chars[i];
       charSpan.style.opacity = '1';
 
@@ -97,6 +102,8 @@ export class HeroAnimation {
 
       await new Promise(r => setTimeout(r, charDelay));
     }
+
+    if (shouldAbort && shouldAbort()) return;
 
     if (agent) {
       agent.setAction('WRITTEN', 'is-selecting');
@@ -168,6 +175,9 @@ export class HeroAnimation {
    */
   async typeTextWords(element, agent = null, options = {}) {
     if (!element) return;
+    const shouldAbort = options.shouldAbort;
+    if (shouldAbort && shouldAbort()) return;
+
     const words = this.prepareTextForTyping(element);
     const wordDelay = options.wordDelay || 45;
     const gsap = window.gsap;
@@ -180,6 +190,8 @@ export class HeroAnimation {
     }
 
     for (let i = 0; i < words.length; i++) {
+      if (shouldAbort && shouldAbort()) return;
+
       const wordSpan = words[i];
       const isHighlight = wordSpan.closest('.headline-highlight');
 
@@ -208,6 +220,8 @@ export class HeroAnimation {
 
       await new Promise(r => setTimeout(r, wordDelay));
     }
+
+    if (shouldAbort && shouldAbort()) return;
 
     if (agent) {
       agent.setAction('COMPLETED', 'is-selecting');
@@ -420,18 +434,37 @@ export class HeroAnimation {
   showFinalStateImmediate() {
     const gsap = window.gsap;
     const selectors = [
-      '.brand-logo', '.nav-item', '#header-contact-btn',
-      '#hero-symbol', '#hero-headline', '#hero-description', '#hero-primary-cta', '#hero-showcase-frame',
-      '#workflow-title', '#workflow-subtitle', '.card-tec', '.card-tec-img',
-      '#services-title', '#services-subtitle', '.service-card', '.service-icon-box',
-      '#cta-title', '#cta-subtitle', '#cta-contact-btn',
-      '#footer-brand', '#footer-symbol', '#footer-social-links'
+      '#site-header', '.brand-logo', '.nav-item', '#header-contact-btn',
+      '#hero-symbol', '#hero-headline', '#headline-main', '#headline-highlight',
+      '#hero-description', '#hero-actions', '#hero-primary-cta', '#hero-showcase-frame',
+      '#workflow-header', '#workflow-title', '#workflow-subtitle', '.card-tec', '.card-tec-img',
+      '#services-header', '#services-title', '#services-subtitle', '.service-card', '.service-icon-box',
+      '#cta-container', '#cta-title', '#cta-subtitle', '#cta-contact-btn',
+      '#site-footer', '#footer-brand', '#footer-symbol', '#footer-social-links'
     ];
+    const selectorStr = selectors.join(',');
+
     if (gsap) {
-      gsap.set(selectors.join(','), { opacity: 1, y: 0, scale: 1, clearProps: 'transform' });
-      document.querySelectorAll('.type-word, .type-char').forEach(w => w.style.opacity = '1');
-      const highlight = document.getElementById('headline-highlight');
-      if (highlight) highlight.classList.add('has-glow');
+      gsap.killTweensOf(selectorStr);
+      gsap.killTweensOf('.type-word, .type-char');
+      gsap.set(selectorStr, { opacity: 1, visibility: 'visible', y: 0, scale: 1, clearProps: 'transform,filter' });
+      gsap.set('.type-word, .type-char', { opacity: 1, y: 0, clearProps: 'transform' });
+    } else {
+      document.querySelectorAll(selectorStr).forEach(el => {
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
+        el.style.transform = '';
+      });
+      document.querySelectorAll('.type-word, .type-char').forEach(w => {
+        w.style.opacity = '1';
+        w.style.transform = '';
+      });
+    }
+
+    const highlight = document.getElementById('headline-highlight');
+    if (highlight) {
+      highlight.style.filter = '';
+      highlight.classList.add('has-glow');
     }
   }
 

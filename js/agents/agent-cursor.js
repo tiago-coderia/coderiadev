@@ -62,10 +62,18 @@ export class AgentCursor {
   }
 
   setPosition(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     this.x = x;
     this.y = y;
     if (this.element) {
       this.element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const flipThreshold = viewportWidth <= 768 ? 115 : 145;
+      if (x > viewportWidth - flipThreshold) {
+        this.element.classList.add('is-flipped-left');
+      } else {
+        this.element.classList.remove('is-flipped-left');
+      }
     }
   }
 
@@ -76,6 +84,7 @@ export class AgentCursor {
 
     if (this.currentActionClass && this.element) {
       this.element.classList.remove(this.currentActionClass);
+      this.currentActionClass = '';
     }
 
     if (actionClass && this.element) {
@@ -110,6 +119,8 @@ export class AgentCursor {
 
   setVisible(visible) {
     if (this.element) {
+      // Ensure no stale inline opacity overrides CSS visibility transitions
+      this.element.style.opacity = '';
       if (visible) {
         this.element.classList.add('is-active');
       } else {
