@@ -21,7 +21,8 @@ export class AgentCoordinator {
     this.tasks = taskEngine;
     this.movement = engine.movement;
     this.boxDrawer = engine.boxDrawer;
-    this.isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Core brand experience: Swarm choreography runs across all devices/OS settings
+    this.isReducedMotion = false;
 
     this.builtSections = new Set();
     this.activeSection = null;
